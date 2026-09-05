@@ -1664,17 +1664,19 @@ body.viewer .import-picks-box::before {
 .match-modal {
   position: fixed; inset: 0; z-index: 92;
   background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
-  display: none; align-items: flex-end; justify-content: center;
+  display: none; align-items: center; justify-content: center;
+  padding: 20px;
 }
 .match-modal.open { display: flex; animation: fadeIn 0.18s; }
 .match-modal-content {
-  background: var(--surface);
-  border-top-left-radius: 20px; border-top-right-radius: 20px;
-  width: 100%; max-width: 720px;
-  padding: 18px 16px calc(20px + env(safe-area-inset-bottom));
-  max-height: 88vh; overflow-y: auto;
-  animation: slideUp 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--surface); border: 1px solid var(--border-strong);
+  border-radius: 20px;
+  width: 100%; max-width: 560px;
+  padding: 18px 16px 20px;
+  max-height: 85vh; overflow-y: auto;
+  animation: popIn 0.18s cubic-bezier(0.4, 0, 0.2, 1);
 }
+@keyframes popIn { from { transform: scale(0.96); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 .match-modal-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 4px; }
 .match-modal-head .teams { font-family: "Anton", sans-serif; font-size: 20px; letter-spacing: 0.03em; text-transform: uppercase; line-height: 1.2; }
 .match-modal-head .meta { font-size: 11px; color: var(--text-faint); margin-top: 4px; letter-spacing: 0.03em; }
