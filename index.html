@@ -7085,6 +7085,17 @@ function renderStats() {
     </tbody>`;
 }
 
+function h2hCompareBarHtml(aVal, bVal) {
+  const total = Math.abs(aVal) + Math.abs(bVal);
+  const aPct = total ? Math.round((Math.abs(aVal) / total) * 100) : 50;
+  const bPct = 100 - aPct;
+  return `
+    <div style="position:relative; display:grid; grid-template-columns:1fr 1fr; height:6px; border-radius:3px; background:var(--surface-2); border:1px solid var(--border-strong); margin-top:12px;">
+      <div style="justify-self:end; width:${aPct}%; height:100%; background:var(--nav-active); border-radius:3px 0 0 3px;"></div>
+      <div style="justify-self:start; width:${bPct}%; height:100%; background:var(--accent-warm); border-radius:0 3px 3px 0;"></div>
+      <div style="position:absolute; left:calc(50% - 1px); top:-2px; bottom:-2px; width:2px; background:var(--surface);"></div>
+    </div>`;
+}
 function renderH2H() {
   const aSel = $('h2hA'), bSel = $('h2hB');
   if (!aSel.options.length) {
@@ -7112,29 +7123,33 @@ function renderH2H() {
     if (aSc > bSc) aWk++; else if (bSc > aSc) bWk++; else ties++;
   });
   const aLead = aTotal > bTotal, bLead = bTotal > aTotal;
+  const avatarHtml = code => `<div class="tipster-avatar" style="background:${avatarColor(code)}; margin:0 auto 6px;">${code[0]}</div>`;
   $('h2hContent').innerHTML = `
     <div class="h2h-card">
       <div class="h2h-stat-grid">
-        <div class="h2h-side ${aLead?'lead':''}"><div class="nm">${a.name}</div><div class="v">${aTotal}</div></div>
+        <div class="h2h-side ${aLead?'lead':''}">${avatarHtml(aCode)}<div class="nm">${a.name}</div><div class="v">${aTotal}</div></div>
         <div class="h2h-mid">TOTAL</div>
-        <div class="h2h-side ${bLead?'lead':''}"><div class="nm">${b.name}</div><div class="v">${bTotal}</div></div>
+        <div class="h2h-side ${bLead?'lead':''}">${avatarHtml(bCode)}<div class="nm">${b.name}</div><div class="v">${bTotal}</div></div>
       </div>
+      ${h2hCompareBarHtml(aTotal, bTotal)}
       <div class="h2h-label">Total points</div>
     </div>
     <div class="h2h-card">
       <div class="h2h-stat-grid">
-        <div class="h2h-side ${aPct !== null && bPct !== null && aPct > bPct ? 'lead':''}"><div class="nm">${a.name}</div><div class="v">${aPct ?? '—'}${aPct !== null ? '%' : ''}</div></div>
+        <div class="h2h-side ${aPct !== null && bPct !== null && aPct > bPct ? 'lead':''}">${avatarHtml(aCode)}<div class="nm">${a.name}</div><div class="v">${aPct ?? '—'}${aPct !== null ? '%' : ''}</div></div>
         <div class="h2h-mid">ACC</div>
-        <div class="h2h-side ${aPct !== null && bPct !== null && bPct > aPct ? 'lead':''}"><div class="nm">${b.name}</div><div class="v">${bPct ?? '—'}${bPct !== null ? '%' : ''}</div></div>
+        <div class="h2h-side ${aPct !== null && bPct !== null && bPct > aPct ? 'lead':''}">${avatarHtml(bCode)}<div class="nm">${b.name}</div><div class="v">${bPct ?? '—'}${bPct !== null ? '%' : ''}</div></div>
       </div>
+      ${h2hCompareBarHtml(aPct || 0, bPct || 0)}
       <div class="h2h-label">Accuracy</div>
     </div>
     <div class="h2h-card">
       <div class="h2h-stat-grid">
-        <div class="h2h-side ${aWk > bWk ? 'lead':''}"><div class="nm">${a.name}</div><div class="v">${aWk}</div></div>
+        <div class="h2h-side ${aWk > bWk ? 'lead':''}">${avatarHtml(aCode)}<div class="nm">${a.name}</div><div class="v">${aWk}</div></div>
         <div class="h2h-mid">${ties} TIE${ties===1?'':'S'}</div>
-        <div class="h2h-side ${bWk > aWk ? 'lead':''}"><div class="nm">${b.name}</div><div class="v">${bWk}</div></div>
+        <div class="h2h-side ${bWk > aWk ? 'lead':''}">${avatarHtml(bCode)}<div class="nm">${b.name}</div><div class="v">${bWk}</div></div>
       </div>
+      ${h2hCompareBarHtml(aWk, bWk)}
       <div class="h2h-label">Round wins</div>
     </div>
     <div class="h2h-card">
