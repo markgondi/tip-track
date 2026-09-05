@@ -184,6 +184,7 @@ main { padding: 20px 16px 32px; max-width: 720px; margin: 0 auto; }
 .standing-row.top1 .rank { color: var(--accent); }
 .standing-row.top2 .rank, .standing-row.top3 .rank { color: var(--accent); opacity: 0.85; }
 .standing-row .ident { min-width: 0; }
+.tipster-avatar { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: 11px; color: #fff; }
 .standing-row .name { font-weight: 600; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .standing-row .meta { font-size: 11px; color: var(--text-faint); margin-top: 2px; letter-spacing: 0.04em; }
 .standing-row .form-line { font-family: "JetBrains Mono", monospace; font-size: 10px; color: var(--text-dim); margin-top: 4px; letter-spacing: 0.04em; }
@@ -2919,6 +2920,18 @@ function isPerfectRound(code, num) {
     if (!correct) return false;
   }
   return true;
+}
+function hasEverHadPerfectRound(code) {
+  for (let num = LIVE_FIRST_ROUND; num <= LAST_ROUND; num++) {
+    if (isPerfectRound(code, num)) return true;
+  }
+  return false;
+}
+const AVATAR_PALETTE = ['#C68A12','#616B80','#4A76B0','#C24F4F','#43938C','#7C5CB3','#B0854A','#5A8C5E'];
+function avatarColor(code) {
+  let hash = 0;
+  for (let i = 0; i < code.length; i++) hash = (hash * 31 + code.charCodeAt(i)) >>> 0;
+  return AVATAR_PALETTE[hash % AVATAR_PALETTE.length];
 }
 function totalScore(code) {
   let total = 0;
@@ -6434,7 +6447,10 @@ function _renderStandingsInner() {
       <div class="standing-row ${tier} ${row.tied ? 'tied' : ''} ${row.rank <= 8 ? 'finals' : ''}">
         <div class="rank">${rankLabel}${deltaHtml}</div>
         <div class="ident">
-          <div class="name">${row.name}</div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div class="tipster-avatar" style="background:${avatarColor(row.code)};">${row.code[0]}</div>
+            <div class="name">${row.name}${hasEverHadPerfectRound(row.code) ? ' <span class="perfect-flame" title="Has had a perfect round">🎯</span>' : ''}</div>
+          </div>
           <div class="meta">${row.code} · ${accPct} acc · after R${selected}: ${row.totalAfterSelected}</div>
           <div class="form-line ${formCls}" title="Last 3 resulted rounds">L3: ${formNumeric}</div>
         </div>
