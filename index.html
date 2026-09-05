@@ -560,54 +560,33 @@ body.spotlight-stuck .spotlight {
 
 .games-list { display: flex; flex-direction: column; gap: 12px; }
 .game-card {
-  border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+  border: 1px solid var(--border); border-radius: 20px; overflow: hidden;
   transition: border-color 0.2s; position: relative; cursor: pointer;
-  /* Whole-card team wash: home colour bleeds from the left, away from the right,
-     meeting at a neutral centre so scores/times stay readable */
-  background:
-    linear-gradient(100deg,
-      color-mix(in srgb, var(--home-c, transparent) 26%, var(--surface)) 0%,
-      var(--surface) 42%,
-      var(--surface) 58%,
-      color-mix(in srgb, var(--away-c, transparent) 26%, var(--surface)) 100%);
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(20,22,30,.05), 0 14px 32px rgba(20,22,30,.09);
 }
-/* Solid edge stripes anchor each side's colour */
-.game-card::before, .game-card::after {
-  content: ""; position: absolute; top: 0; bottom: 0; width: 4px;
+/* Thin top stripe blends home into away, matching the design system */
+.game-card::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px;
   pointer-events: none;
+  background: linear-gradient(90deg, var(--home-c, transparent) 0%, var(--home-c, transparent) 50%, var(--away-c, transparent) 50%, var(--away-c, transparent) 100%);
 }
-.game-card::before { left: 0; background: var(--home-c, transparent); }
-.game-card::after { right: 0; background: var(--away-c, transparent); }
-.game-card.has-winner { border-color: rgba(245,200,66,0.3); }
-/* Winner takeover: the winning team's colour washes the whole card,
-   strongest from the winner's side; the losing side darkens and desaturates */
-.game-card.win-home {
-  background: linear-gradient(100deg,
-    color-mix(in srgb, var(--win-c) 38%, var(--surface)) 0%,
-    color-mix(in srgb, var(--win-c) 12%, var(--surface)) 100%);
+.game-card.has-winner { border-color: rgba(245,200,66,0.35); }
+.game-card.win-home::before, .game-card.win-away::before { background: var(--win-c, transparent); }
+.game-card.has-winner .team-btn:not(.winner) .team-logo {
+  filter: grayscale(0.7) brightness(0.85); opacity: 0.6;
 }
-.game-card.win-away {
-  background: linear-gradient(100deg,
-    color-mix(in srgb, var(--win-c) 12%, var(--surface)) 0%,
-    color-mix(in srgb, var(--win-c) 38%, var(--surface)) 100%);
-}
-.game-card.has-winner .team-btn:not(.winner) {
-  filter: grayscale(0.7) brightness(0.55);
-}
-.game-card.win-home::after { opacity: 0.2; }
-.game-card.win-away::before { opacity: 0.2; }
-.game-head { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; border-bottom: 1px solid var(--border); color: var(--text-dim); font-size: 11px; letter-spacing: 0.06em; }
+.game-card.has-winner .team-btn:not(.winner) .team-name { color: var(--text-faint); }
+.game-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 0; color: var(--text-dim); font-size: 11px; letter-spacing: 0.06em; }
 .game-head .when { font-weight: 600; color: var(--text-dim); }
 .game-head .venue { color: var(--text-faint); font-size: 10px; text-align: right; }
-.game-matchup { display: grid; grid-template-columns: 1fr auto 1fr; align-items: stretch; }
-.team-btn { padding: 14px 10px; text-align: center; background: transparent; transition: background 0.15s; position: relative; }
+.game-matchup { display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; padding: 14px 16px 0; gap: 8px; }
+.team-btn { text-align: center; background: transparent; transition: background 0.15s; position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; border-radius: 14px; padding: 4px; }
 .team-btn:hover { background: rgba(16,28,51,0.04); }
-.team-btn .team-name { font-family: "Anton", sans-serif; font-size: 18px; letter-spacing: 0.04em; line-height: 1; color: var(--text); transition: color 0.15s; }
-.team-btn .ha { font-size: 9px; letter-spacing: 0.2em; color: var(--text-faint); margin-top: 4px; }
-.team-row { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 32px; }
-.team-logo { width: 34px; height: 34px; object-fit: contain; flex-shrink: 0; background: #fff; border-radius: 9px; padding: 4px; box-sizing: border-box; box-shadow: 0 1px 2px rgba(20,22,30,.08), 0 3px 8px rgba(20,22,30,.10); }
-.game-card.has-winner .team-btn:not(.winner) .team-logo { filter: grayscale(1) brightness(0.6); }
-
+.team-btn .team-name { font-family: "Anton", sans-serif; font-size: 14px; letter-spacing: 0.02em; line-height: 1.2; color: var(--text); transition: color 0.15s; }
+.team-btn .ha { display: none; }
+.team-row { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+.team-logo { width: 54px; height: 54px; object-fit: contain; flex-shrink: 0; background: #fff; border-radius: 15px; padding: 7px; box-sizing: border-box; box-shadow: 0 1px 2px rgba(20,22,30,.08), 0 3px 8px rgba(20,22,30,.10); }
 .ladder-pill {
   display: inline-flex; align-items: center; gap: 3px;
   padding: 2px 7px; border-radius: 999px;
@@ -620,10 +599,9 @@ body.spotlight-stuck .spotlight {
 .ladder-pill.top { background: rgba(111,207,151,0.12); color: var(--positive); border: 1px solid rgba(111,207,151,0.25); }
 .ladder-pill.mid { background: rgba(245,200,66,0.1); color: var(--accent); border: 1px solid rgba(245,200,66,0.25); }
 .ladder-pill.low { background: rgba(140,160,190,0.08); color: var(--text-dim); border: 1px solid rgba(140,160,190,0.18); }
-.team-btn.winner { background: rgba(245,200,66,0.10); }
 .team-btn.winner .team-name { color: var(--accent); }
-.team-btn.winner::after { content: "WINNER"; position: absolute; bottom: 4px; left: 0; right: 0; font-size: 8px; letter-spacing: 0.2em; color: var(--accent); font-weight: 700; }
-.vs-divider { display: flex; align-items: center; justify-content: center; color: var(--text-faint); font-family: "Anton", sans-serif; font-size: 14px; padding: 0 6px; }
+.team-btn.winner .team-logo { box-shadow: 0 0 0 2.5px var(--accent), 0 1px 2px rgba(20,22,30,.08), 0 4px 10px rgba(20,22,30,.10); }
+.vs-divider { display: flex; align-items: center; justify-content: center; color: var(--text-faint); font-family: "Anton", sans-serif; font-size: 13px; padding: 10px 4px 0; }
 
 .picks-area { padding: 12px 14px 14px; border-top: 1px solid var(--border); }
 .picks-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
@@ -6530,7 +6508,7 @@ function renderHistoricRound(num, fx) {
           </button>
           <div class="vs-divider">${original.homeScore}–${original.awayScore}</div>
           <button class="team-btn ${winner === 'away' ? 'winner' : ''}" disabled>
-            <div class="team-row"><div class="team-name">${g.away.toUpperCase()}</div>${teamLogoHtml(g.away)}</div>
+            <div class="team-row">${teamLogoHtml(g.away)}<div class="team-name">${g.away.toUpperCase()}</div></div>
             <div class="ha">AWAY · ${awayPicks.length}</div>
           </button>
         </div>
@@ -6687,20 +6665,15 @@ function renderLiveRound(num, fx) {
         </div>
         <div class="game-matchup">
           <button class="team-btn ${winner === 'home' ? 'winner' : ''}" data-side="home" data-game="${i}">
-            ${ladderPillHtml(g.home, num)}
             <div class="team-row">${teamLogoHtml(g.home)}<div class="team-name">${g.home.toUpperCase()}</div></div>
             <div class="ha">HOME</div>
-            ${moneylineHtml(num, i, 'home')}
           </button>
           <div class="vs-divider">VS</div>
           <button class="team-btn ${winner === 'away' ? 'winner' : ''}" data-side="away" data-game="${i}">
-            ${ladderPillHtml(g.away, num)}
-            <div class="team-row"><div class="team-name">${g.away.toUpperCase()}</div>${teamLogoHtml(g.away)}</div>
+            <div class="team-row">${teamLogoHtml(g.away)}<div class="team-name">${g.away.toUpperCase()}</div></div>
             <div class="ha">AWAY</div>
-            ${moneylineHtml(num, i, 'away')}
           </button>
         </div>
-        ${oddsSourceHtml(num, i)}
         ${winSplitBarHtml(g, gameWinSplit(num, i))}
         <div class="picks-area">
           <div class="picks-row">
