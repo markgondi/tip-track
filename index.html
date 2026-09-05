@@ -547,6 +547,12 @@ body.spotlight-stuck .spotlight {
 .round-summary .info { flex: 1; min-width: 0; }
 .round-summary .info .when { font-weight: 600; font-size: 14px; }
 .round-summary .info .meta { color: var(--text-dim); font-size: 12px; margin-top: 2px; }
+.round-stat-tiles { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9px; margin: -6px 0 16px; }
+.round-stat-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px 10px; text-align: center; }
+.round-stat-tile .val { font-family: "Anton", sans-serif; font-size: 19px; }
+.round-stat-tile .lbl { margin-top: 2px; font-size: 8.5px; letter-spacing: 0.07em; color: var(--text-faint); text-transform: uppercase; }
+.round-stat-tile.gold { background: linear-gradient(155deg, rgba(245,200,66,0.14), rgba(245,200,66,0.05)); border-color: rgba(245,200,66,0.35); }
+.round-stat-tile.gold .val, .round-stat-tile.gold .lbl { color: var(--accent); }
 .fetch-btn, .small-btn { background: var(--surface-2); border: 1px solid var(--border-strong); color: var(--text); padding: 9px 14px; border-radius: 999px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; transition: background 0.15s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 .fetch-btn:hover, .small-btn:hover { background: var(--surface-3); }
 .fetch-btn:disabled, .small-btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -1648,6 +1654,19 @@ body.viewer .import-picks-box::before {
 .win-split-fill.away { background: var(--away-c, var(--accent-warm)); }
 .win-split-caption { text-align: center; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); margin-top: 5px; }
 .edge-badge { position: absolute; top: 12px; right: -1px; font-family: "Anton", sans-serif; font-size: 9.5px; letter-spacing: 0.08em; color: #fff; background: var(--accent); padding: 4px 9px 4px 11px; border-radius: 6px 0 0 6px; box-shadow: 0 3px 8px rgba(245,200,66,0.4); z-index: 2; }
+.round-hero { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: 22px; box-shadow: 0 2px 6px rgba(20,22,30,.08), 0 16px 36px rgba(20,22,30,.12); overflow: hidden; margin-bottom: 16px; cursor: pointer; }
+.round-hero-label { display: flex; align-items: center; gap: 6px; font-family: "Anton", sans-serif; font-size: 10.5px; letter-spacing: 0.1em; color: var(--text-faint); padding: 14px 18px 0; }
+.round-hero-label .pip { width: 7px; height: 7px; border-radius: 50%; background: var(--negative); animation: livePulse 1.4s infinite; }
+.round-hero-stripe { height: 5px; margin-top: 10px; }
+.round-hero-body { padding: 16px 18px 4px; }
+.round-hero-teams { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.round-hero-team { display: flex; flex-direction: column; align-items: center; gap: 10px; flex: 1; }
+.round-hero-crest { width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; }
+.round-hero-crest .team-logo { width: 64px; height: 64px; border-radius: 18px; padding: 9px; border: 2.5px solid; border-color: inherit; }
+.round-hero-team .name { font-family: "Anton", sans-serif; font-size: 15px; letter-spacing: 0.02em; }
+.round-hero-score { font-family: "Anton", sans-serif; font-size: 26px; margin-top: -4px; }
+.round-hero-vs { font-family: "Anton", sans-serif; font-size: 13px; color: var(--text-faint); padding-top: 22px; }
+.round-hero-tippers { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 16px; padding-top: 14px; border-top: 1px solid var(--border); }
 .win-split-wrap.large .win-split-labels { font-size: 20px; font-family: "Anton", sans-serif; letter-spacing: 0.02em; }
 .win-split-wrap.large .win-split-bar { height: 10px; border-radius: 5px; }
 
@@ -2227,6 +2246,8 @@ body.compact-mode { padding: 0; overflow: hidden; background: transparent; }
       <button class="fetch-btn" id="copyBtn" title="Copy this round's scores">Copy</button>
     </div>
 
+    <div class="round-stat-tiles" id="roundStatTiles"></div>
+
     <div class="round-subtabs" id="roundSubtabs">
       <button class="round-subtab active" data-round-subpane="games" title="Matches and winners">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg>
@@ -2243,6 +2264,7 @@ body.compact-mode { padding: 0; overflow: hidden; background: transparent; }
       </div>
 
     <div class="round-subpane active" id="roundSubPane-games">
+      <div id="roundHero"></div>
       <div class="subpane-hint" id="gamesPaneHint">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
         <div id="gamesPaneHintText"><strong>Tap the winner.</strong> Picks show under each game.</div>
@@ -5977,6 +5999,34 @@ function isEdgePick(roundNum, gameIdx) {
   if (!crowd || !fav) return false;
   return crowd !== fav;
 }
+function computeRoundStatTiles(num) {
+  let correct = 0, attempted = 0;
+  TIPSTERS.forEach(t => {
+    const a = correctAndAttempted(t.code);
+    correct += a.correct; attempted += a.attempted;
+  });
+  const strikeRate = attempted ? Math.round((correct / attempted) * 100) : 0;
+  const fx = getFixture(num);
+  const totalGames = fx.games.length;
+  let resultedCount = 0, edgeCount = 0;
+  if (num <= 7) {
+    resultedCount = totalGames;
+  } else {
+    const r = getRound(num);
+    resultedCount = Object.keys(r.winners || {}).length;
+    fx.games.forEach((g, i) => { if (!r.winners?.[i] && isEdgePick(num, i)) edgeCount++; });
+  }
+  return { strikeRate, resultedCount, totalGames, edgeCount };
+}
+function renderRoundStatTiles(num) {
+  const el = $('roundStatTiles');
+  if (!el) return;
+  const s = computeRoundStatTiles(num);
+  el.innerHTML = `
+    <div class="round-stat-tile"><div class="val">${s.strikeRate}%</div><div class="lbl">Strike Rate</div></div>
+    <div class="round-stat-tile"><div class="val">${s.resultedCount}<span style="color:var(--text-faint);font-size:13px;">/${s.totalGames}</span></div><div class="lbl">Resulted</div></div>
+    <div class="round-stat-tile${s.edgeCount ? ' gold' : ''}"><div class="val">${s.edgeCount}</div><div class="lbl">Edge Pick${s.edgeCount === 1 ? '' : 's'}</div></div>`;
+}
 /* Last-n results for a team ('W'/'L'), oldest to newest, walking the same
    historic+live iteration pattern as teamStrengthMap. */
 function teamRecentForm(team, beforeRound, n = 5) {
@@ -6425,6 +6475,8 @@ function _renderRoundInner() {
   $('roundNumBig').textContent = num;
   $('roundWhen').textContent = fx.range;
   $('roundMeta').textContent = `${fx.games.length} games · Bye: ${fx.bye}`;
+  renderRoundStatTiles(num);
+  renderRoundHero(num);
   if (num <= 7) renderHistoricRound(num, fx);
   else renderLiveRound(num, fx);
   renderMissingPicksBanner();
@@ -6471,6 +6523,63 @@ function renderHistoricRound(num, fx) {
       </div>`;
   }).join('');
   $('byeArea').innerHTML = `<div class="bye-card">BYE: <strong>${fx.bye}</strong></div>`;
+}
+
+/* Whatever's happening right now for this round — live, just-finished, or
+   the next kickoff — always shown first, ahead of the flat games list. */
+function renderRoundHero(num) {
+  const el = $('roundHero');
+  if (!el) return;
+  const cand = spotlightCandidate();
+  if (!cand) { el.innerHTML = ''; return; }
+  const { i, g, mode, liveScore } = cand;
+
+  let labelHtml, scoreHtml;
+  if (mode === 'live') {
+    labelHtml = `<div class="round-hero-label"><span class="pip"></span>LIVE &middot; ${liveScore.minute || liveScore.status || 'in play'}</div>`;
+    scoreHtml = `<div class="round-hero-score">${liveScore.home}</div>`;
+  } else if (mode === 'ft') {
+    labelHtml = `<div class="round-hero-label">FULL TIME</div>`;
+    scoreHtml = liveScore ? `<div class="round-hero-score">${liveScore.home}</div>` : '';
+  } else {
+    labelHtml = `<div class="round-hero-label">NEXT &middot; ${formatKickoff(cand.startMs)}${timeUntilKickoff(cand.startMs) ? ' &middot; ' + timeUntilKickoff(cand.startMs) : ''}</div>`;
+    scoreHtml = '';
+  }
+  const awayScoreHtml = mode !== 'next' && liveScore ? `<div class="round-hero-score">${liveScore.away}</div>` : '';
+
+  const r = getRound(num);
+  const homeCodes = r.picksHome?.[i] || [];
+  const awayCodes = r.picksAway?.[i] || [];
+  const winner = r.winners?.[i];
+  const pill = (code, side) => {
+    let cls = side === 'home' ? '' : 'away';
+    if (winner) cls = winner === side ? 'correct' : 'wrong';
+    return `<span class="spotlight-tip-pill ${cls}">${code}</span>`;
+  };
+  const allPills = [...homeCodes.map(c => pill(c, 'home')), ...awayCodes.map(c => pill(c, 'away'))];
+
+  el.innerHTML = `
+    <div class="round-hero" data-game="${i}" style="--home-c:${teamColor(g.home)};--away-c:${teamColor(g.away)}">
+      ${labelHtml}
+      <div class="round-hero-stripe" style="background:linear-gradient(90deg,${teamColor(g.home)} 0%,${teamColor(g.home)} 50%,${teamColor(g.away)} 50%,${teamColor(g.away)} 100%);"></div>
+      <div class="round-hero-body">
+        <div class="round-hero-teams">
+          <div class="round-hero-team">
+            <div class="round-hero-crest" style="border-color:${teamColor(g.home)};">${teamLogoHtml(g.home)}</div>
+            <div class="name">${g.home.toUpperCase()}</div>
+            ${scoreHtml}
+          </div>
+          <div class="round-hero-vs">VS</div>
+          <div class="round-hero-team">
+            <div class="round-hero-crest" style="border-color:${teamColor(g.away)};">${teamLogoHtml(g.away)}</div>
+            <div class="name">${g.away.toUpperCase()}</div>
+            ${awayScoreHtml}
+          </div>
+        </div>
+        ${winSplitBarHtml(g, gameWinSplit(num, i), true)}
+        ${allPills.length ? `<div class="round-hero-tippers">${allPills.join('')}</div>` : ''}
+      </div>
+    </div>`;
 }
 
 function renderLiveRound(num, fx) {
@@ -7532,6 +7641,11 @@ function init() {
   $('gamesList')?.addEventListener('click', (e) => {
     if (e.target.closest('.team-btn, .picks-input, .apply-game-pred')) return;
     const card = e.target.closest('.game-card[data-game]');
+    if (!card) return;
+    openMatchModal(State.currentRound, +card.dataset.game);
+  });
+  $('roundHero')?.addEventListener('click', (e) => {
+    const card = e.target.closest('.round-hero[data-game]');
     if (!card) return;
     openMatchModal(State.currentRound, +card.dataset.game);
   });
