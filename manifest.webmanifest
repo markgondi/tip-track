@@ -1,0 +1,24 @@
+{
+  "name": "Tip Track",
+  "short_name": "Tip Track",
+  "description": "NRL family tipping tracker",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0E1B2C",
+  "theme_color": "#0E1B2C",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='42' fill='%230E1B2C'/%3E%3Ctext x='96' y='86' font-family='Helvetica,Arial,sans-serif' font-size='32' font-weight='900' fill='%23F4EDE2' text-anchor='middle' letter-spacing='2'%3ETIP%3C/text%3E%3Ctext x='96' y='138' font-family='Helvetica,Arial,sans-serif' font-size='32' font-weight='900' fill='%23F5C842' text-anchor='middle' letter-spacing='2'%3ETRACK%3C/text%3E%3Ccircle cx='158' cy='136' r='6' fill='%23F5C842'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%230E1B2C'/%3E%3Ctext x='256' y='230' font-family='Helvetica,Arial,sans-serif' font-size='86' font-weight='900' fill='%23F4EDE2' text-anchor='middle' letter-spacing='6'%3ETIP%3C/text%3E%3Ctext x='256' y='370' font-family='Helvetica,Arial,sans-serif' font-size='86' font-weight='900' fill='%23F5C842' text-anchor='middle' letter-spacing='6'%3ETRACK%3C/text%3E%3Ccircle cx='420' cy='362' r='16' fill='%23F5C842'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+# Netlify config for Tip Track
+# Place this file at the root of your Netlify site (alongside index.html).
+
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+# Functions runtime + bundling
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = []
+
+# Optional: prettier path. The function declares its own path
+# (`/api/state`) via the `config.path` export, so no redirect needed.
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    Referrer-Policy = "strict-origin-when-cross-origin"
