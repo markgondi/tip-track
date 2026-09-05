@@ -1755,9 +1755,14 @@ body.viewer .import-picks-box::before {
 .api-status.err { display: block; background: rgba(235,87,87,0.08); border-color: rgba(235,87,87,0.22); color: var(--negative); }
 .api-status.info { display: block; }
 
-.quick-picks-box, .import-picks-box, .pred-settings { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 14px; }
-.quick-picks-box h3, .import-picks-box h3, .pred-settings h3 { font-family: "Anton", sans-serif; font-size: 16px; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
-.quick-picks-box p, .import-picks-box p, .pred-settings p { color: var(--text-dim); font-size: 12px; line-height: 1.45; margin-bottom: 10px; }
+.quick-picks-box, .import-picks-box, .pred-settings {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 20px; padding: 18px 16px; margin-bottom: 14px;
+  box-shadow: 0 1px 2px rgba(20,22,30,.05), 0 14px 32px rgba(20,22,30,.09);
+}
+.quick-picks-box h3, .import-picks-box h3, .pred-settings h3 { font-family: "Anton", sans-serif; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px; display: flex; align-items: center; gap: 7px; }
+.quick-picks-box h3::before, .import-picks-box h3::before, .pred-settings h3::before { content: ""; width: 3px; height: 13px; border-radius: 2px; background: var(--accent); }
+.quick-picks-box p, .import-picks-box p, .pred-settings p { color: var(--text-faint); font-size: 12px; line-height: 1.45; margin-bottom: 12px; }
 .quick-pick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
 .quick-pick-status { margin-top: 10px; padding: 10px 12px; background: rgba(245,200,66,0.07); border: 1px solid rgba(245,200,66,0.22); border-radius: 12px; color: var(--accent); font-size: 11.5px; line-height: 1.45; }
 .quick-pick-status.ok { background: rgba(30,157,92,0.07); border-color: rgba(30,157,92,0.25); color: var(--positive); }
@@ -1852,15 +1857,14 @@ body.subtabs-stuck .round-subtabs {
 
 .subpane-hint {
   display: flex; gap: 10px; align-items: flex-start;
-  background: linear-gradient(135deg, rgba(78,205,196,0.08), rgba(78,205,196,0.02));
-  border: 1px solid rgba(78,205,196,0.18);
-  border-radius: 10px; padding: 10px 12px; margin-bottom: 14px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 12px 14px; margin-bottom: 14px;
   color: var(--text-dim); font-size: 12px; line-height: 1.5;
 }
 .subpane-hint .icon {
-  flex-shrink: 0; width: 16px; height: 16px; color: var(--accent-cool); margin-top: 1px;
+  flex-shrink: 0; width: 16px; height: 16px; color: var(--nav-active); margin-top: 1px;
 }
-.subpane-hint strong { color: var(--accent-cool); font-weight: 700; }
+.subpane-hint strong { color: var(--text); font-weight: 700; }
 
 .api-section {
   background: var(--surface); border: 1px solid var(--border);
@@ -2039,7 +2043,7 @@ a.api-step-action { text-decoration: none; }
   .api-step-row { grid-template-columns: 1fr; }
 }
 
-.import-picks-textarea { width: 100%; min-height: 132px; resize: vertical; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); padding: 10px 11px; font-family: "JetBrains Mono", monospace; font-size: 12px; line-height: 1.45; }
+.import-picks-textarea { width: 100%; min-height: 132px; resize: vertical; background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; color: var(--text); padding: 12px; font-family: "JetBrains Mono", monospace; font-size: 12px; line-height: 1.45; }
 .import-picks-textarea:focus { border-color: var(--accent); background: var(--surface-3); outline: none; }
 .import-picks-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
 .import-picks-file { width: 100%; background: var(--surface-2); border: 1px dashed var(--border-strong); border-radius: 10px; color: var(--text-dim); padding: 9px; font-size: 12px; margin-top: 10px; }
