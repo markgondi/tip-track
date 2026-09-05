@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0E1B2C">
+<meta name="theme-color" content="#F2F4F8">
 <title>Tip Track · NRL 2026</title>
 
 <!-- PWA / Add-to-home-screen support -->
@@ -21,30 +21,31 @@
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  /* Stadium Night — refined navy, broadcast-graphics feel */
-  --bg: #0C1626; --surface: #13223A; --surface-2: #1B3050; --surface-3: #264066;
-  --text: #F5EFE4; --text-dim: #93A5BD; --text-faint: #5F7290;
+  color-scheme: light;
+  /* Stadium Day — clean light broadcast-graphics feel */
+  --bg: #F2F4F8; --surface: #FFFFFF; --surface-2: #F0F3F8; --surface-3: #E4E9F1;
+  --text: #101C33; --text-dim: #57647D; --text-faint: #8B96AC;
   /* Gold = achievement only (winners, rank 1, perfect round) */
-  --accent: #F5C842; --accent-warm: #FF6B3D; --accent-cool: #4ECDC4;
-  --positive: #5ED095; --negative: #F0564F;
+  --accent: #B8860F; --accent-warm: #E0562A; --accent-cool: #1E9A90;
+  --positive: #1E9D5C; --negative: #D93B34;
   /* NRL electric blue — navigation + interactive identity */
-  --nav-active: #4D9FFF; --nav-active-glow: rgba(77,159,255,0.25);
+  --nav-active: #2563EB; --nav-active-glow: rgba(37,99,235,0.2);
   --nrl-blue: #2E7CF6; --nrl-blue-deep: #123D8F;
-  --border: rgba(160,190,230,0.10); --border-strong: rgba(160,190,230,0.20);
+  --border: rgba(16,28,51,0.10); --border-strong: rgba(16,28,51,0.18);
   --tab-h: 64px;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 *:focus-visible { outline: 2px solid var(--nav-active); outline-offset: 2px; }
 html, body { background: var(--bg); color: var(--text); font-family: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
-body { min-height: 100vh; min-height: 100dvh; padding-bottom: calc(var(--tab-h) + env(safe-area-inset-bottom)); background-image: radial-gradient(ellipse 80% 40% at 50% 100%, rgba(46,124,246,0.04), transparent 70%); }
+body { min-height: 100vh; min-height: 100dvh; padding-bottom: calc(var(--tab-h) + env(safe-area-inset-bottom)); background-image: radial-gradient(ellipse 80% 40% at 50% 100%, rgba(37,99,235,0.03), transparent 70%); }
 /* Ambient stadium-light drift — two soft glows wandering very slowly */
 body::before {
   content: ""; position: fixed; inset: -30%;
   z-index: -1; pointer-events: none;
   background:
-    radial-gradient(ellipse 34% 26% at 22% 24%, rgba(46,124,246,0.055), transparent 70%),
-    radial-gradient(ellipse 42% 30% at 78% 68%, rgba(77,159,255,0.04), transparent 70%),
-    radial-gradient(ellipse 28% 20% at 62% 8%, rgba(245,200,66,0.022), transparent 70%);
+    radial-gradient(ellipse 34% 26% at 22% 24%, rgba(37,99,235,0.035), transparent 70%),
+    radial-gradient(ellipse 42% 30% at 78% 68%, rgba(37,99,235,0.025), transparent 70%),
+    radial-gradient(ellipse 28% 20% at 62% 8%, rgba(184,134,15,0.018), transparent 70%);
   animation: bgDrift 75s ease-in-out infinite alternate;
   will-change: transform;
 }
@@ -57,7 +58,7 @@ body::before {
 body::after {
   content: ""; position: fixed; inset: 0;
   z-index: -1; pointer-events: none;
-  background: linear-gradient(180deg, transparent 0%, rgba(77,159,255,0.035) 45%, rgba(46,124,246,0.02) 60%, transparent 100%);
+  background: linear-gradient(180deg, transparent 0%, rgba(37,99,235,0.02) 45%, rgba(37,99,235,0.012) 60%, transparent 100%);
   background-size: 100% 250vh;
   background-repeat: repeat-y;
   background-position: 0 calc(var(--sy, 0) * -0.25px);
@@ -593,7 +594,7 @@ body.spotlight-stuck .spotlight {
 .game-head .venue { color: var(--text-faint); font-size: 10px; text-align: right; }
 .game-matchup { display: grid; grid-template-columns: 1fr auto 1fr; align-items: stretch; }
 .team-btn { padding: 14px 10px; text-align: center; background: transparent; transition: background 0.15s; position: relative; }
-.team-btn:hover { background: rgba(255,255,255,0.04); }
+.team-btn:hover { background: rgba(16,28,51,0.04); }
 .team-btn .team-name { font-family: "Anton", sans-serif; font-size: 18px; letter-spacing: 0.04em; line-height: 1; color: var(--text); transition: color 0.15s; }
 .team-btn .ha { font-size: 9px; letter-spacing: 0.2em; color: var(--text-faint); margin-top: 4px; }
 .team-row { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 32px; }
@@ -696,7 +697,7 @@ body.spotlight-stuck .spotlight {
 .h2h-mid { font-family: "Anton", sans-serif; font-size: 12px; color: var(--text-faint); letter-spacing: 0.1em; text-align: center; }
 .h2h-label { color: var(--text-dim); font-size: 11px; text-align: center; margin-top: 6px; letter-spacing: 0.06em; text-transform: uppercase; }
 
-.tabbar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 60; background: rgba(14,27,44,0.94); backdrop-filter: blur(18px) saturate(160%); -webkit-backdrop-filter: blur(18px) saturate(160%); border-top: 1px solid var(--border); height: var(--tab-h); padding-bottom: env(safe-area-inset-bottom); display: grid; grid-template-columns: repeat(4, 1fr); }
+.tabbar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 60; background: rgba(255,255,255,0.92); backdrop-filter: blur(18px) saturate(160%); -webkit-backdrop-filter: blur(18px) saturate(160%); border-top: 1px solid var(--border); height: var(--tab-h); padding-bottom: env(safe-area-inset-bottom); display: grid; grid-template-columns: repeat(4, 1fr); }
 .tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: var(--text-faint); transition: color 0.15s; position: relative; }
 .tab svg { width: 22px; height: 22px; }
 .tab .lbl { font-size: 10px; letter-spacing: 0.06em; font-weight: 600; text-transform: uppercase; }
@@ -1995,10 +1996,10 @@ a.api-step-action { text-decoration: none; }
 body.compact-mode { padding: 0; overflow: hidden; background: transparent; }
 .compact-root {
   width: 100vw; height: 100vh; box-sizing: border-box;
-  background: rgba(12,22,38,0.60);
+  background: rgba(255,255,255,0.75);
   backdrop-filter: blur(20px) saturate(150%);
   -webkit-backdrop-filter: blur(20px) saturate(150%);
-  border: 1px solid rgba(160,190,230,0.28);
+  border: 1px solid rgba(16,28,51,0.14);
   border-radius: 14px;
   padding: 10px 12px;
   display: flex; flex-direction: column; gap: 8px;
