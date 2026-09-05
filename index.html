@@ -1668,6 +1668,12 @@ body.viewer .import-picks-box::before {
 .round-hero-score { font-family: "Anton", sans-serif; font-size: 26px; margin-top: -4px; }
 .round-hero-vs { font-family: "Anton", sans-serif; font-size: 13px; color: var(--text-faint); padding-top: 22px; }
 .round-hero-tippers { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+.sec-label { font-family: "Anton", sans-serif; font-size: 11px; letter-spacing: 0.1em; color: var(--text-faint); margin: 4px 0 11px; }
+.archived-card { display: flex; align-items: center; gap: 11px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; margin-top: 14px; cursor: pointer; }
+.archived-icon { width: 34px; height: 34px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text-faint); flex-shrink: 0; }
+.archived-info .title { font-weight: 700; font-size: 13px; }
+.archived-info .sub { font-size: 10.5px; color: var(--text-faint); margin-top: 1px; }
+.archived-hint { text-align: center; margin-top: 8px; font-size: 9.5px; letter-spacing: 0.06em; color: var(--text-faint); text-transform: uppercase; }
 .win-split-wrap.large .win-split-labels { font-size: 20px; font-family: "Anton", sans-serif; letter-spacing: 0.02em; }
 .win-split-wrap.large .win-split-bar { height: 10px; border-radius: 5px; }
 
@@ -2271,9 +2277,11 @@ body.compact-mode { padding: 0; overflow: hidden; background: transparent; }
         <div id="gamesPaneHintText"><strong>Tap the winner.</strong> Picks show under each game.</div>
       </div>
       <div id="missingPicksBanner"></div>
+      <div class="sec-label" id="comingUpLabel" hidden>COMING UP</div>
       <div class="games-list" id="gamesList"></div>
       <div id="byeArea"></div>
       <div id="roundActionsRow"></div>
+      <div id="archivedResults"></div>
     </div>
 
     <div class="round-subpane" id="roundSubPane-picks">
@@ -6493,6 +6501,7 @@ function _renderRoundInner() {
   $('roundMeta').textContent = `${fx.games.length} games · Bye: ${fx.bye}`;
   renderRoundStatTiles(num);
   renderRoundHero(num);
+  renderArchivedResults(num);
   if (num <= 7) renderHistoricRound(num, fx);
   else renderLiveRound(num, fx);
   renderMissingPicksBanner();
@@ -6598,11 +6607,36 @@ function renderRoundHero(num) {
     </div>`;
 }
 
+function renderArchivedResults(num) {
+  const el = $('archivedResults');
+  if (!el) return;
+  const prevNum = num - 1;
+  if (prevNum < FIRST_ROUND) { el.innerHTML = ''; return; }
+  const fx = getFixture(prevNum);
+  el.innerHTML = `
+    <div class="archived-card" data-jump="${prevNum}">
+      <div class="archived-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V21H3V8"/><path d="M1 3H23V8H1Z"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+      </div>
+      <div class="archived-info" style="flex:1;">
+        <div class="title">Round ${prevNum} Results</div>
+        <div class="sub">${fx.games.length} games${prevNum >= LIVE_FIRST_ROUND ? ' · winners auto-filled from live scores' : ''}</div>
+      </div>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="archived-hint">Browse earlier rounds with the arrows above</div>`;
+  el.querySelector('.archived-card')?.addEventListener('click', () => setRound(prevNum));
+}
+
 function renderLiveRound(num, fx) {
   const r = getRound(num);
   const settings = getPredictionSettings();
+  const heroIdx = spotlightCandidate()?.i;
+  const comingUpLabel = $('comingUpLabel');
+  if (comingUpLabel) comingUpLabel.hidden = heroIdx === undefined;
 
   $('gamesList').innerHTML = fx.games.map((g, i) => {
+    if (i === heroIdx) return '';
     const winner = r.winners?.[i];
     const picksHome = (r.picksHome?.[i] || []);
     const picksAway = (r.picksAway?.[i] || []);
