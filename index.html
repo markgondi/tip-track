@@ -4399,12 +4399,16 @@ function applyLiveData(events) {
   LiveState.prevScores = LiveState.scores;
   LiveState.scores = newScores;
 
-  // Persist FT scores to State.rounds.scores so the wrap-up sheet has them after reloads
+  // Persist FT scores to State.rounds.scores so the wrap-up sheet has them after reloads,
+  // and auto-declare the winner so results need zero manual taps.
+  let winnersChanged = false;
+  let winnerAnnounced = null;
   try {
     const num = State.currentRound;
     const r = State.rounds[num];
     if (r) {
       r.scores = r.scores || {};
+      r.winners = r.winners || {};
       let persisted = false;
       Object.entries(newScores).forEach(([iStr, s]) => {
         const i = +iStr;
@@ -4418,21 +4422,40 @@ function applyLiveData(events) {
             stampNow(`round:${num}:score:${i}`);
             persisted = true;
           }
+          if (s.home !== s.away) {
+            const winnerSide = s.home > s.away ? 'home' : 'away';
+            if (r.winners[i] !== winnerSide) {
+              r.winners[i] = winnerSide;
+              stampNow(`round:${num}:winners:${i}`);
+              persisted = true;
+              winnersChanged = true;
+              const fx = getFixture(num);
+              const g = fx.games[i];
+              winnerAnnounced = `🏆 ${winnerSide === 'home' ? g.home : g.away} win — ${s.home}-${s.away}`;
+            }
+          }
         }
       });
       if (persisted) saveState();
     }
   } catch (e) {}
 
-  if (anyChanged) {
-    // Re-render the games list to show updated scores
+  if (anyChanged || winnersChanged) {
+    // Re-render the games list to show updated scores/winners
     if (State.currentTab === 'round' && State.roundSubTab === 'games') {
       renderRound();
     }
+    // Winners affect tipster scoring everywhere, not just the round pane
+    if (winnersChanged) {
+      renderStandings();
+      if (State.currentTab === 'stats') renderStats();
+      if (State.currentTab === 'h2h') renderH2H();
+    }
     // Always update spotlight even if not on round tab
     if (typeof renderSpotlight === 'function') renderSpotlight();
-    // Toast for the most recent change (only one to avoid spam)
-    if (changes.length) showToast('⚡ ' + changes[0]);
+    // Toast for the most recent change (only one to avoid spam) — prefer announcing a winner
+    if (winnerAnnounced) showToast(winnerAnnounced);
+    else if (changes.length) showToast('⚡ ' + changes[0]);
   }
 }
 
