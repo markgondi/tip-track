@@ -1664,6 +1664,18 @@ body.viewer .import-picks-box::before {
 .round-hero-vs { font-family: "Anton", sans-serif; font-size: 13px; color: var(--text-faint); padding-top: 22px; }
 .round-hero-tippers { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 16px; padding-top: 14px; border-top: 1px solid var(--border); }
 .sec-label { font-family: "Anton", sans-serif; font-size: 11px; letter-spacing: 0.1em; color: var(--text-faint); margin: 4px 0 11px; }
+.card-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 13px 16px 14px; margin-top: 2px; border-top: 1px solid var(--border); }
+.tipper-stack { display: flex; align-items: center; }
+.tipper-dot {
+  width: 24px; height: 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: 9.5px;
+  color: #fff; border: 2px solid var(--surface); margin-left: -7px; flex-shrink: 0;
+}
+.tipper-stack .tipper-dot:first-child { margin-left: 0; }
+.tipper-dot.more { background: var(--surface-2); color: var(--text-dim); }
+.view-match { display: flex; align-items: center; gap: 3px; font-weight: 700; font-size: 11px; color: var(--text-dim); letter-spacing: 0.03em; flex-shrink: 0; }
+.view-match svg { width: 13px; height: 13px; }
 .archived-card { display: flex; align-items: center; gap: 11px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; margin-top: 14px; cursor: pointer; }
 .archived-icon { width: 34px; height: 34px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text-faint); flex-shrink: 0; }
 .archived-info .title { font-weight: 700; font-size: 13px; }
@@ -6560,16 +6572,7 @@ function renderHistoricRound(num, fx) {
           </button>
         </div>
         ${winSplitBarHtml(g, split)}
-        <div class="picks-area">
-          <div class="picks-row">
-            <div class="picks-label"><span>Tipped ${g.home}</span><span class="count">${homePicks.length}</span></div>
-            <div class="picks-input" style="background:transparent;border:none;padding:6px 0;">${homePicks.join(' ') || '—'}</div>
-          </div>
-          <div class="picks-row">
-            <div class="picks-label"><span>Tipped ${g.away}</span><span class="count">${awayPicks.length}</span></div>
-            <div class="picks-input" style="background:transparent;border:none;padding:6px 0;">${awayPicks.join(' ') || '—'}</div>
-          </div>
-        </div>
+        ${cardFooterHtml(num, i)}
       </div>`;
   }).join('');
   $('byeArea').innerHTML = `<div class="bye-card">BYE: <strong>${fx.bye}</strong></div>`;
@@ -6653,6 +6656,25 @@ function renderArchivedResults(num) {
   el.querySelector('.archived-card')?.addEventListener('click', () => setRound(prevNum));
 }
 
+/* Overlapping circle stack of the tipsters who've picked this game,
+   plus the "view match" affordance — the card footer from the design. */
+function cardFooterHtml(roundNum, gameIdx, limit = 5) {
+  const codes = ALL_CODES.filter(code => pickSide(roundNum, code, gameIdx));
+  const shown = codes.slice(0, limit);
+  const extra = codes.length - shown.length;
+  const dots = shown.map(code =>
+    `<span class="tipper-dot" style="background:${avatarColor(code)};" title="${code}">${code[0]}</span>`
+  ).join('');
+  const more = extra > 0 ? `<span class="tipper-dot more">+${extra}</span>` : '';
+  return `
+    <div class="card-footer">
+      <div class="tipper-stack">${dots}${more}</div>
+      <div class="view-match">VIEW MATCH
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>`;
+}
+
 function renderLiveRound(num, fx) {
   const r = getRound(num);
   const settings = getPredictionSettings();
@@ -6722,22 +6744,8 @@ function renderLiveRound(num, fx) {
           </button>
         </div>
         ${winSplitBarHtml(g, gameWinSplit(num, i))}
-        <div class="picks-area">
-          <div class="picks-row">
-            <div class="picks-label"><span>Tipped ${g.home}</span><span class="count">${picksHome.length}</span></div>
-            <input type="text" class="picks-input" data-side="home" data-game="${i}"
-                   value="${picksHome.join(' ')}" placeholder="e.g. W DT I SM NK"
-                   autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false">
-          </div>
-          <div class="picks-row">
-            <div class="picks-label"><span>Tipped ${g.away}</span><span class="count">${picksAway.length}</span></div>
-            <input type="text" class="picks-input" data-side="away" data-game="${i}"
-                   value="${picksAway.join(' ')}" placeholder="e.g. E P G M SD"
-                   autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false">
-          </div>
-          ${warn}
-          ${predHtml}
-        </div>
+        ${cardFooterHtml(num, i)}
+        ${predHtml ? `<div class="picks-area">${predHtml}</div>` : ''}
       </div>`;
   }).join('');
 
