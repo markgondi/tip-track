@@ -553,7 +553,7 @@ body.spotlight-stuck .spotlight {
 .games-list { display: flex; flex-direction: column; gap: 12px; }
 .game-card {
   border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
-  transition: border-color 0.2s; position: relative;
+  transition: border-color 0.2s; position: relative; cursor: pointer;
   /* Whole-card team wash: home colour bleeds from the left, away from the right,
      meeting at a neutral centre so scores/times stay readable */
   background:
@@ -1636,6 +1636,56 @@ body.viewer .import-picks-box::before {
 .moneyline.dog { color: var(--negative); }
 .moneyline .dec { color: var(--text-faint); font-weight: 400; font-size: 10px; margin-left: 4px; }
 .odds-source { color: var(--text-faint); font-size: 10px; text-align: center; padding: 0 12px 10px; letter-spacing: 0.04em; }
+
+/* Win-split bar — used on game cards and the match detail sheet */
+.win-split-wrap { padding: 2px 14px 12px; }
+.win-split-labels { display: flex; justify-content: space-between; font-family: "JetBrains Mono", monospace; font-size: 11px; font-weight: 700; margin-bottom: 5px; }
+.win-split-labels .home { color: var(--home-c, var(--text-dim)); }
+.win-split-labels .away { color: var(--away-c, var(--text-dim)); text-align: right; }
+.win-split-bar { display: flex; height: 6px; border-radius: 3px; overflow: hidden; background: var(--surface-2); }
+.win-split-fill.home { background: var(--home-c, var(--nav-active)); }
+.win-split-fill.away { background: var(--away-c, var(--accent-warm)); }
+.win-split-caption { text-align: center; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); margin-top: 5px; }
+.win-split-wrap.large .win-split-labels { font-size: 20px; font-family: "Anton", sans-serif; letter-spacing: 0.02em; }
+.win-split-wrap.large .win-split-bar { height: 10px; border-radius: 5px; }
+
+/* Team comparison bars — match detail sheet */
+.compare-list { display: flex; flex-direction: column; gap: 10px; }
+.compare-row-labels { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; font-family: "JetBrains Mono", monospace; font-size: 12px; font-weight: 700; }
+.compare-row-labels .home { text-align: right; color: var(--text); }
+.compare-row-labels .stat { color: var(--text-faint); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; align-self: center; }
+.compare-row-labels .away { text-align: left; color: var(--text); }
+.compare-bar { display: grid; grid-template-columns: 1fr 1fr; height: 6px; border-radius: 3px; overflow: hidden; background: var(--surface-2); }
+.compare-fill { height: 100%; }
+.compare-fill.home { justify-self: end; background: var(--nav-active); }
+.compare-fill.away { justify-self: start; background: var(--accent-warm); }
+
+/* Match detail bottom sheet — clone of .round-modal's slide-up idiom */
+.match-modal {
+  position: fixed; inset: 0; z-index: 92;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+  display: none; align-items: flex-end; justify-content: center;
+}
+.match-modal.open { display: flex; animation: fadeIn 0.18s; }
+.match-modal-content {
+  background: var(--surface);
+  border-top-left-radius: 20px; border-top-right-radius: 20px;
+  width: 100%; max-width: 720px;
+  padding: 18px 16px calc(20px + env(safe-area-inset-bottom));
+  max-height: 88vh; overflow-y: auto;
+  animation: slideUp 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.match-modal-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 4px; }
+.match-modal-head .teams { font-family: "Anton", sans-serif; font-size: 20px; letter-spacing: 0.03em; text-transform: uppercase; line-height: 1.2; }
+.match-modal-head .meta { font-size: 11px; color: var(--text-faint); margin-top: 4px; letter-spacing: 0.03em; }
+.match-modal-close { width: 32px; height: 32px; border-radius: 50%; background: var(--surface-2); color: var(--text-dim); font-size: 22px; line-height: 1; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.match-modal-close:hover { background: var(--surface-3); color: var(--text); }
+.match-modal-section { margin-top: 18px; }
+.match-modal-section h4 { font-family: "Anton", sans-serif; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; }
+.match-modal-score { text-align: center; font-family: "Anton", sans-serif; font-size: 28px; margin: 10px 0 4px; }
+.match-report { font-size: 13px; line-height: 1.5; color: var(--text-dim); }
+.match-tip-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.match-tip-pills.away { justify-content: flex-end; }
 .api-status { display: none; margin: -6px 0 16px; padding: 10px 12px; border-radius: 10px; background: rgba(245,200,66,0.06); border: 1px solid rgba(245,200,66,0.18); color: var(--accent); font-size: 12px; line-height: 1.4; }
 .api-status.ok { display: block; background: rgba(111,207,151,0.06); border-color: rgba(111,207,151,0.18); color: var(--positive); }
 .api-status.err { display: block; background: rgba(235,87,87,0.08); border-color: rgba(235,87,87,0.22); color: var(--negative); }
@@ -2410,6 +2460,10 @@ body.compact-mode { padding: 0; overflow: hidden; background: transparent; }
     </div>
     <div class="round-modal-grid" id="roundModalGrid"></div>
   </div>
+</div>
+
+<div class="match-modal" id="matchModal" role="dialog" aria-modal="true" aria-labelledby="matchModalTitle">
+  <div class="match-modal-content" id="matchModalContent"></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -5901,6 +5955,76 @@ function favouriteSideForGame(roundNum, gameIdx) {
   if (h.pd !== a.pd) return h.pd > a.pd ? 'home' : 'away';
   return null;
 }
+
+/* ========== Match detail helpers ========== */
+function finalScoreForGame(roundNum, gameIdx) {
+  if (roundNum >= 1 && roundNum <= 7) {
+    const g = HISTORIC_MATCHES[roundNum]?.games[gameIdx];
+    return g ? { home: g.homeScore, away: g.awayScore } : null;
+  }
+  return State.rounds[roundNum]?.scores?.[gameIdx] || null;
+}
+function resultSideForGame(roundNum, gameIdx) {
+  if (roundNum >= 1 && roundNum <= 7) return historicWinnerSide(roundNum, gameIdx);
+  return State.rounds[roundNum]?.winners?.[gameIdx] || null;
+}
+/* Win split for a game — real bookmaker implied % when odds were fetched,
+   otherwise the raw tip split (never blended with unpicked-tipster guesses). */
+function gameWinSplit(roundNum, gameIdx) {
+  const odds = getStoredOdds(roundNum, gameIdx);
+  if (odds && odds.home && odds.away) {
+    const p = impliedPct(odds.home, odds.away);
+    if (p) return { home: p.home, away: p.away, source: 'odds', label: 'Bookmaker odds' };
+  }
+  const sides = ALL_CODES.map(code => pickSide(roundNum, code, gameIdx)).filter(Boolean);
+  if (!sides.length) return { home: 0.5, away: 0.5, source: 'tips', label: 'No tips yet', empty: true };
+  const homeN = sides.filter(s => s === 'home').length;
+  const awayN = sides.length - homeN;
+  return { home: homeN / sides.length, away: awayN / sides.length, source: 'tips', label: `${sides.length} tip${sides.length === 1 ? '' : 's'} in` };
+}
+/* Last-n results for a team ('W'/'L'), oldest to newest, walking the same
+   historic+live iteration pattern as teamStrengthMap. */
+function teamRecentForm(team, beforeRound, n = 5) {
+  const results = [];
+  for (let round = beforeRound - 1; round >= 1 && results.length < n; round--) {
+    const games = round <= 7 ? HISTORIC_MATCHES[round]?.games : FIXTURES[round]?.games;
+    if (!games) continue;
+    games.forEach((g, i) => {
+      if (g.home !== team && g.away !== team) return;
+      const winner = round <= 7 ? historicWinnerSide(round, i) : (State.rounds[round]?.winners?.[i] || null);
+      if (!winner) return;
+      const won = (winner === 'home' && g.home === team) || (winner === 'away' && g.away === team);
+      results.push(won ? 'W' : 'L');
+    });
+  }
+  return results.slice(0, n).reverse();
+}
+/* Auto-generated one-paragraph report for the match detail sheet — built only
+   from real derived data (win split, ladder position, actual result). */
+function matchReportText(roundNum, gameIdx) {
+  const fx = getFixture(roundNum);
+  const g = fx.games[gameIdx];
+  const split = gameWinSplit(roundNum, gameIdx);
+  const favSide = split.home >= split.away ? 'home' : 'away';
+  const favTeam = favSide === 'home' ? g.home : g.away;
+  const favPct = Math.round((favSide === 'home' ? split.home : split.away) * 100);
+  const ladder = teamLadder(roundNum);
+  const hL = ladder[g.home], aL = ladder[g.away];
+  const rankLine = (hL?.played && aL?.played)
+    ? `${g.home} sit ${ordinalLabel(hL.rank)} on the ladder against ${g.away} in ${ordinalLabel(aL.rank)}.`
+    : '';
+  const result = finalScoreForGame(roundNum, gameIdx);
+  const winnerSide = resultSideForGame(roundNum, gameIdx);
+  if (result && winnerSide) {
+    const winnerTeam = winnerSide === 'home' ? g.home : g.away;
+    const margin = Math.abs(result.home - result.away);
+    const wasUpset = !split.empty && favTeam !== winnerTeam;
+    const upsetLine = wasUpset ? ` That's an upset — ${split.label.toLowerCase()} had ${favTeam} favoured at ${favPct}%.` : '';
+    return `${winnerTeam} won ${Math.max(result.home, result.away)}–${Math.min(result.home, result.away)} (by ${margin}).${upsetLine} ${rankLine}`.trim();
+  }
+  if (split.empty) return `No tips are in yet for this game. ${rankLine}`.trim();
+  return `${favTeam} are favoured at ${favPct}% (${split.label.toLowerCase()}). ${rankLine}`.trim();
+}
 function buildPickProfile(code, beforeRound) {
   const profile = { samples:0, homePicks:0, favSamples:0, favPicks:0, teamOpps:{}, teamPicks:{}, recent:[] };
   const bump = (o, k) => o[k] = (o[k] || 0) + 1;
@@ -6320,8 +6444,9 @@ function renderHistoricRound(num, fx) {
     const winner = historicWinnerSide(num, i);
     const homePicks = (HISTORIC_PICKS[num][i] || '').split(/\s+/).filter(Boolean);
     const awayPicks = ALL_CODES.filter(c => !homePicks.includes(c));
+    const split = gameWinSplit(num, i);
     return `
-      <div class="game-card has-winner ${winner ? 'win-' + winner : ''}" style="--home-c:${teamColor(g.home)};--away-c:${teamColor(g.away)}${winner ? ';--win-c:' + teamColor(winner === 'home' ? g.home : g.away) : ''}">
+      <div class="game-card has-winner ${winner ? 'win-' + winner : ''}" data-game="${i}" style="--home-c:${teamColor(g.home)};--away-c:${teamColor(g.away)}${winner ? ';--win-c:' + teamColor(winner === 'home' ? g.home : g.away) : ''}">
         <div class="game-head">
           <span class="when">${g.when}</span>
           <span class="venue">${original.homeScore}–${original.awayScore}</span>
@@ -6337,6 +6462,7 @@ function renderHistoricRound(num, fx) {
             <div class="ha">AWAY · ${awayPicks.length}</div>
           </button>
         </div>
+        ${winSplitBarHtml(g, split)}
         <div class="picks-area">
           <div class="picks-row">
             <div class="picks-label"><span>Tipped ${g.home}</span><span class="count">${homePicks.length}</span></div>
@@ -6420,6 +6546,7 @@ function renderLiveRound(num, fx) {
           </button>
         </div>
         ${oddsSourceHtml(num, i)}
+        ${winSplitBarHtml(g, gameWinSplit(num, i))}
         <div class="picks-area">
           <div class="picks-row">
             <div class="picks-label"><span>Tipped ${g.home}</span><span class="count">${picksHome.length}</span></div>
@@ -7096,6 +7223,107 @@ function closeRoundModal() {
   document.body.style.overflow = '';
 }
 
+function winSplitBarHtml(g, split, large) {
+  const homePct = Math.round(split.home * 100), awayPct = 100 - homePct;
+  return `
+    <div class="win-split-wrap${large ? ' large' : ''}" style="--home-c:${teamColor(g.home)};--away-c:${teamColor(g.away)}">
+      <div class="win-split-labels">
+        <span class="home">${split.empty ? '—' : homePct + '%'}</span>
+        <span class="away">${split.empty ? '—' : awayPct + '%'}</span>
+      </div>
+      <div class="win-split-bar">
+        <div class="win-split-fill home" style="width:${homePct}%"></div>
+        <div class="win-split-fill away" style="width:${awayPct}%"></div>
+      </div>
+      <div class="win-split-caption">${split.label}</div>
+    </div>`;
+}
+
+function compareRowHtml(label, homeVal, awayVal, homeDisplay, awayDisplay) {
+  const total = Math.abs(homeVal) + Math.abs(awayVal);
+  const homePct = total ? Math.round((Math.abs(homeVal) / total) * 100) : 50;
+  const awayPct = 100 - homePct;
+  return `
+    <div>
+      <div class="compare-row-labels">
+        <span class="home">${homeDisplay}</span>
+        <span class="stat">${label}</span>
+        <span class="away">${awayDisplay}</span>
+      </div>
+      <div class="compare-bar">
+        <div class="compare-fill home" style="width:${homePct}%"></div>
+        <div class="compare-fill away" style="width:${awayPct}%"></div>
+      </div>
+    </div>`;
+}
+
+function openMatchModal(roundNum, gameIdx) {
+  const fx = getFixture(roundNum);
+  const g = fx?.games?.[gameIdx];
+  const content = $('matchModalContent');
+  if (!g || !content) return;
+
+  const split = gameWinSplit(roundNum, gameIdx);
+  const ladder = teamLadder(roundNum);
+  const hL = ladder[g.home] || null, aL = ladder[g.away] || null;
+  const teamCount = Object.keys(ladder).length;
+  const hForm = teamRecentForm(g.home, roundNum);
+  const aForm = teamRecentForm(g.away, roundNum);
+  const result = finalScoreForGame(roundNum, gameIdx);
+  const winnerSide = resultSideForGame(roundNum, gameIdx);
+
+  const sides = ALL_CODES.map(code => ({ code, side: pickSide(roundNum, code, gameIdx) })).filter(p => p.side);
+  const pillHtml = (code, side) => {
+    let cls = side === 'home' ? '' : 'away';
+    if (winnerSide) cls = (winnerSide === side) ? 'correct' : 'wrong';
+    return `<span class="spotlight-tip-pill ${cls}">${code}</span>`;
+  };
+
+  content.innerHTML = `
+    <div class="match-modal-head">
+      <div>
+        <div class="teams" id="matchModalTitle">${g.home} <span style="color:var(--text-faint);">v</span> ${g.away}</div>
+        <div class="meta">Round ${roundNum} · ${g.when || ''}${g.venue ? ' · ' + g.venue : ''}</div>
+      </div>
+      <button class="match-modal-close" id="matchModalClose" aria-label="Close">×</button>
+    </div>
+    ${result ? `<div class="match-modal-score">${result.home}–${result.away}</div>` : ''}
+    ${winSplitBarHtml(g, split, true)}
+    <div class="match-modal-section">
+      <h4>Team Comparison</h4>
+      <div class="compare-list">
+        ${hL?.played && aL?.played ? compareRowHtml('Ladder Rank', teamCount + 1 - hL.rank, teamCount + 1 - aL.rank, '#' + hL.rank, '#' + aL.rank) : ''}
+        ${hL?.played && aL?.played ? compareRowHtml('Points', hL.pts, aL.pts, hL.pts, aL.pts) : ''}
+        ${hL?.played && aL?.played ? compareRowHtml('Points Diff', hL.pd, aL.pd, (hL.pd > 0 ? '+' : '') + hL.pd, (aL.pd > 0 ? '+' : '') + aL.pd) : ''}
+        <div class="compare-row-labels">
+          <span class="home">${hForm.join(' ') || '—'}</span>
+          <span class="stat">Last ${Math.max(hForm.length, aForm.length) || 5}</span>
+          <span class="away">${aForm.join(' ') || '—'}</span>
+        </div>
+      </div>
+    </div>
+    <div class="match-modal-section">
+      <h4>Tipster Split</h4>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="match-tip-pills home">${sides.filter(p => p.side === 'home').map(p => pillHtml(p.code, 'home')).join('') || '<span style="color:var(--text-faint);font-size:11px;">no picks yet</span>'}</div>
+        <div class="match-tip-pills away">${sides.filter(p => p.side === 'away').map(p => pillHtml(p.code, 'away')).join('')}</div>
+      </div>
+    </div>
+    <div class="match-modal-section">
+      <h4>Report</h4>
+      <div class="match-report">${matchReportText(roundNum, gameIdx)}</div>
+    </div>`;
+
+  $('matchModalClose')?.addEventListener('click', closeMatchModal);
+  $('matchModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeMatchModal() {
+  $('matchModal')?.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
 function jumpToLive() {
   const live = liveRoundNumber();
   if (live === State.currentRound) {
@@ -7292,8 +7520,18 @@ function init() {
   $('roundModal')?.addEventListener('click', (e) => {
     if (e.target === $('roundModal')) closeRoundModal();
   });
+  $('matchModal')?.addEventListener('click', (e) => {
+    if (e.target === $('matchModal')) closeMatchModal();
+  });
+  $('gamesList')?.addEventListener('click', (e) => {
+    if (e.target.closest('.team-btn, .picks-input, .apply-game-pred')) return;
+    const card = e.target.closest('.game-card[data-game]');
+    if (!card) return;
+    openMatchModal(State.currentRound, +card.dataset.game);
+  });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && $('roundModal')?.classList.contains('open')) closeRoundModal();
+    if (e.key === 'Escape' && $('matchModal')?.classList.contains('open')) closeMatchModal();
   });
   $('copyBtn')?.addEventListener('click', copyRoundScores);
   $('importPicksBtn')?.addEventListener('click', applyImportedPicks);
