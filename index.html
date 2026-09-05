@@ -598,7 +598,7 @@ body.spotlight-stuck .spotlight {
 .team-btn .team-name { font-family: "Anton", sans-serif; font-size: 18px; letter-spacing: 0.04em; line-height: 1; color: var(--text); transition: color 0.15s; }
 .team-btn .ha { font-size: 9px; letter-spacing: 0.2em; color: var(--text-faint); margin-top: 4px; }
 .team-row { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 32px; }
-.team-logo { width: 30px; height: 30px; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4)); }
+.team-logo { width: 34px; height: 34px; object-fit: contain; flex-shrink: 0; background: #fff; border-radius: 9px; padding: 4px; box-sizing: border-box; box-shadow: 0 1px 2px rgba(20,22,30,.08), 0 3px 8px rgba(20,22,30,.10); }
 .game-card.has-winner .team-btn:not(.winner) .team-logo { filter: grayscale(1) brightness(0.6); }
 
 .ladder-pill {
@@ -1686,6 +1686,8 @@ body.viewer .import-picks-box::before {
 .match-modal-section { margin-top: 18px; }
 .match-modal-section h4 { font-family: "Anton", sans-serif; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; }
 .match-modal-score { text-align: center; font-family: "Anton", sans-serif; font-size: 28px; margin: 10px 0 4px; }
+.match-modal-crest { width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; }
+.match-modal-crest .team-logo { width: 56px; height: 56px; border-radius: 16px; padding: 8px; }
 .match-report { font-size: 13px; line-height: 1.5; color: var(--text-dim); }
 .match-tip-pills { display: flex; flex-wrap: wrap; gap: 6px; }
 .match-tip-pills.away { justify-content: flex-end; }
@@ -2835,69 +2837,17 @@ function teamColor(name) {
   return key ? TEAM_COLORS[key] : 'transparent';
 }
 
-/* === Team badges (real club logos) ===
-   Fetched once from TheSportsDB (same API used for scores), cached 7 days.
-   Cards render logos when available; if the fetch or an image fails, cards
-   simply show no logo — colour wash and stripes still carry identity. */
-const TEAM_BADGES = {};
-const BADGE_CACHE_KEY = 'tip-track-badges-v3';
-async function loadTeamBadges() {
-  const EXPECTED = Object.keys(TEAM_COLORS).length; // 17
-  // Use cache ONLY if it's complete — a partial map must never stick.
-  try {
-    const cached = JSON.parse(localStorage.getItem(BADGE_CACHE_KEY) || 'null');
-    if (cached && cached.map && Object.keys(cached.map).length >= EXPECTED &&
-        cached.at && (Date.now() - cached.at) < 7 * 24 * 3600 * 1000) {
-      Object.assign(TEAM_BADGES, cached.map);
-      return;
-    }
-    // Partial/expired cache: seed what we have so some logos show while we refetch
-    if (cached && cached.map) Object.assign(TEAM_BADGES, cached.map);
-  } catch (e) {}
-  try {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 12000);
-    let teams = [];
-    const urls = [
-      'https://www.thesportsdb.com/api/v1/json/123/search_all_teams.php?l=Australian%20National%20Rugby%20League',
-      'https://www.thesportsdb.com/api/v1/json/123/lookup_all_teams.php?id=4416'
-    ];
-    for (const u of urls) {
-      try {
-        const r = await fetch(u, { signal: ctrl.signal });
-        if (!r.ok) continue;
-        const data = await r.json();
-        if (data?.teams?.length) { teams = data.teams; break; }
-      } catch (e) {}
-    }
-    clearTimeout(timer);
-    if (!teams.length) return;
-
-    Object.keys(TEAM_COLORS).forEach(nick => {
-      const needle = nick.toLowerCase();
-      const hit = teams.find(t => {
-        const hay = `${t.strTeam || ''} ${t.strTeamShort || ''} ${t.strTeamAlternate || t.strAlternate || ''}`.toLowerCase();
-        return hay.includes(needle);
-      });
-      // Use the full-size badge (always present). /tiny is a resize variant that
-      // isn't generated for every club, which is why some logos silently failed.
-      const badge = hit && (hit.strBadge || hit.strTeamBadge);
-      if (badge) TEAM_BADGES[nick] = badge;
-    });
-
-    const got = Object.keys(TEAM_BADGES).length;
-    // Only persist a COMPLETE map so a partial run can't poison the cache.
-    if (got >= EXPECTED) {
-      localStorage.setItem(BADGE_CACHE_KEY, JSON.stringify({ at: Date.now(), map: TEAM_BADGES }));
-    } else {
-      // Keep whatever we found for this session, but don't cache it — next load retries.
-      localStorage.removeItem(BADGE_CACHE_KEY);
-    }
-    if (got) {
-      try { if (State.currentTab === 'round') renderRound(); } catch (e) {}
-    }
-  } catch (e) { /* offline or API down — cards render without logos */ }
-}
+/* === Team badges (real club crests) ===
+   Curated local files (logos/) — reliable and consistent, no external
+   fetch/caching needed. */
+const TEAM_BADGES = {
+  'Broncos': 'logos/Broncos.gif', 'Raiders': 'logos/Raiders.png', 'Bulldogs': 'logos/Bulldogs.png',
+  'Sharks': 'logos/sharks.jpg', 'Titans': 'logos/Titans.png', 'Sea Eagles': 'logos/Sea-eagles.png',
+  'Storm': 'logos/Storm.png', 'Knights': 'logos/Knights.png', 'Cowboys': 'logos/Cowboys.png',
+  'Eels': 'logos/Eels.png', 'Panthers': 'logos/Panthers.png', 'Rabbitohs': 'logos/Rabbitohs.png',
+  'Dragons': 'logos/Dragons.png', 'Roosters': 'logos/Roosters.png', 'Warriors': 'logos/Warriors.png',
+  'Tigers': 'logos/Tigers.png', 'Dolphins': 'logos/Dolphins.webp'
+};
 function teamLogoHtml(name) {
   const key = Object.keys(TEAM_BADGES).find(k => name && name.includes(k));
   if (!key) return '';
@@ -7313,7 +7263,17 @@ function openMatchModal(roundNum, gameIdx) {
       </div>
       <button class="match-modal-close" id="matchModalClose" aria-label="Close">×</button>
     </div>
-    ${result ? `<div class="match-modal-score">${result.home}–${result.away}</div>` : ''}
+    <div style="display:flex; align-items:center; justify-content:center; gap:18px; margin-top:14px;">
+      <div style="display:flex; flex-direction:column; align-items:center; gap:8px; width:88px;">
+        <div class="match-modal-crest">${teamLogoHtml(g.home)}</div>
+        <div class="teams" style="font-size:12.5px; text-align:center; line-height:1.15;">${g.home.toUpperCase()}</div>
+      </div>
+      ${result ? `<div class="match-modal-score" style="margin:0;">${result.home}–${result.away}</div>` : `<div style="font-family:'Anton',sans-serif; font-size:14px; color:var(--text-faint);">VS</div>`}
+      <div style="display:flex; flex-direction:column; align-items:center; gap:8px; width:88px;">
+        <div class="match-modal-crest">${teamLogoHtml(g.away)}</div>
+        <div class="teams" style="font-size:12.5px; text-align:center; line-height:1.15;">${g.away.toUpperCase()}</div>
+      </div>
+    </div>
     ${winSplitBarHtml(g, split, true)}
     <div class="match-modal-section">
       <h4>Team Comparison</h4>
@@ -7711,7 +7671,6 @@ function init() {
     if (f) importBackupFromFile(f);
     e.target.value = '';
   });
-  loadTeamBadges();
   // One-shot stamp pruning per session (owner only)
   if (!document.body.classList.contains('viewer')) {
     setTimeout(pruneOldStamps, 4000);
