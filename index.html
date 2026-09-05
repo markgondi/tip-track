@@ -28,6 +28,8 @@
   /* Gold = achievement only (winners, rank 1, perfect round) */
   --accent: #B8860F; --accent-warm: #E0562A; --accent-cool: #1E9A90;
   --positive: #1E9D5C; --negative: #D93B34;
+  /* Orange = live / happening now (paired with the mono-black hero) */
+  --live: #F26A21; --live-tint: rgba(242,106,33,0.12);
   /* NRL electric blue — navigation + interactive identity */
   --nav-active: #2563EB; --nav-active-glow: rgba(37,99,235,0.2);
   --nrl-blue: #2E7CF6; --nrl-blue-deep: #123D8F;
@@ -95,8 +97,8 @@ body.header-hidden .header { transform: translateY(-100%); }
   transition: background 0.2s;
 }
 .live-status .live-pip.on {
-  background: var(--negative);
-  box-shadow: 0 0 0 2px rgba(235,87,87,0.18);
+  background: var(--live);
+  box-shadow: 0 0 0 2px rgba(242,106,33,0.2);
   animation: livePulse 1.4s infinite;
 }
 .live-status .live-pip.idle { background: var(--text-faint); opacity: 0.6; }
@@ -111,17 +113,17 @@ body.header-hidden .header { transform: translateY(-100%); }
   display: inline-flex; align-items: center; gap: 5px;
   margin-left: auto;
   padding: 2px 8px;
-  background: rgba(235,87,87,0.12);
-  border: 1px solid rgba(235,87,87,0.3);
+  background: var(--live-tint);
+  border: 1px solid rgba(242,106,33,0.32);
   border-radius: 999px;
   font-family: "JetBrains Mono", monospace;
-  font-size: 10px; color: var(--negative);
+  font-size: 10px; color: var(--live);
   letter-spacing: 0.04em;
   transition: background 0.4s ease;
 }
 .live-badge .live-dot {
   width: 5px; height: 5px; border-radius: 50%;
-  background: var(--negative);
+  background: var(--live);
   animation: livePulse 1.4s infinite;
 }
 .live-badge .live-score { font-weight: 700; color: var(--text); }
@@ -273,8 +275,8 @@ body.spotlight-stuck .spotlight {
 .spotlight:hover { border-color: var(--accent); }
 .spotlight:active { transform: scale(0.99); }
 .spotlight.live {
-  border-color: rgba(235,87,87,0.5);
-  background: linear-gradient(135deg, rgba(235,87,87,0.08) 0%, var(--surface) 100%);
+  border-color: rgba(242,106,33,0.5);
+  background: linear-gradient(135deg, var(--live-tint) 0%, var(--surface) 100%);
 }
 .spotlight.ft {
   border-color: rgba(140,160,190,0.25);
@@ -311,8 +313,8 @@ body.spotlight-stuck .spotlight {
   background: var(--accent-cool);
 }
 .spotlight.live .spotlight-pip {
-  background: var(--negative);
-  box-shadow: 0 0 0 3px rgba(235,87,87,0.18);
+  background: var(--live);
+  box-shadow: 0 0 0 3px rgba(242,106,33,0.2);
   animation: livePulse 1.4s infinite;
 }
 .spotlight.ft .spotlight-pip {
@@ -324,7 +326,7 @@ body.spotlight-stuck .spotlight {
   color: var(--text-faint);
 }
 .spotlight.live .spotlight-status > span:nth-child(2) {
-  color: var(--negative);
+  color: var(--live);
 }
 .spotlight.ft .spotlight-status > span:nth-child(2) {
   color: #8B9CB3;
@@ -1650,19 +1652,43 @@ body.viewer .import-picks-box::before {
 .win-split-fill.away { background: var(--away-c, var(--accent-warm)); }
 .win-split-caption { text-align: center; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); margin-top: 5px; }
 .edge-badge { position: absolute; top: 12px; right: -1px; font-family: "Anton", sans-serif; font-size: 9.5px; letter-spacing: 0.08em; color: #fff; background: var(--accent); padding: 4px 9px 4px 11px; border-radius: 6px 0 0 6px; box-shadow: 0 3px 8px rgba(245,200,66,0.4); z-index: 2; }
-.round-hero { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: 22px; box-shadow: 0 2px 6px rgba(20,22,30,.08), 0 16px 36px rgba(20,22,30,.12); overflow: hidden; margin-bottom: 16px; cursor: pointer; }
-.round-hero-label { display: flex; align-items: center; gap: 6px; font-family: "Anton", sans-serif; font-size: 10.5px; letter-spacing: 0.1em; color: var(--text-faint); padding: 14px 18px 0; }
-.round-hero-label .pip { width: 7px; height: 7px; border-radius: 50%; background: var(--negative); animation: livePulse 1.4s infinite; }
-.round-hero-stripe { height: 5px; margin-top: 10px; }
-.round-hero-body { padding: 16px 18px 4px; }
+/* Mono-black hero: the one game happening right now gets a blacked-out
+   broadcast panel with a live orange accent — white crest chips pop
+   against it and it separates cleanly from the white cards below. */
+.round-hero {
+  position: relative; border-radius: 22px; overflow: hidden;
+  margin-bottom: 16px; cursor: pointer;
+  background: linear-gradient(160deg, #23262F 0%, #14161C 60%, #101219 100%);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 2px 6px rgba(20,22,30,.16), 0 18px 40px rgba(20,22,30,.28);
+  color: #fff;
+}
+.round-hero::after {
+  content: ""; position: absolute; top: -60px; right: -50px;
+  width: 220px; height: 220px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(242,106,33,0.18), transparent 70%);
+  pointer-events: none;
+}
+.round-hero-label { position: relative; z-index: 1; display: flex; align-items: center; gap: 6px; font-family: "Anton", sans-serif; font-size: 10.5px; letter-spacing: 0.12em; color: var(--live); padding: 15px 18px 0; }
+.round-hero-label.muted { color: rgba(255,255,255,0.55); }
+.round-hero-label .pip { width: 7px; height: 7px; border-radius: 50%; background: var(--live); box-shadow: 0 0 0 3px rgba(242,106,33,0.22); animation: livePulse 1.4s infinite; }
+.round-hero-stripe { height: 5px; margin-top: 11px; }
+.round-hero-body { position: relative; z-index: 1; padding: 16px 18px 14px; }
 .round-hero-teams { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .round-hero-team { display: flex; flex-direction: column; align-items: center; gap: 10px; flex: 1; }
 .round-hero-crest { width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; }
-.round-hero-crest .team-logo { width: 64px; height: 64px; border-radius: 18px; padding: 9px; border: 2.5px solid; border-color: inherit; }
-.round-hero-team .name { font-family: "Anton", sans-serif; font-size: 15px; letter-spacing: 0.02em; }
-.round-hero-score { font-family: "Anton", sans-serif; font-size: 26px; margin-top: -4px; }
-.round-hero-vs { font-family: "Anton", sans-serif; font-size: 13px; color: var(--text-faint); padding-top: 22px; }
-.round-hero-tippers { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+.round-hero-crest .team-logo { width: 64px; height: 64px; border-radius: 18px; padding: 9px; border: 2.5px solid; border-color: inherit; box-shadow: 0 4px 14px rgba(0,0,0,0.45); }
+.round-hero-team .name { font-family: "Anton", sans-serif; font-size: 15px; letter-spacing: 0.02em; color: #fff; }
+.round-hero-score { font-family: "Anton", sans-serif; font-size: 28px; margin-top: -4px; color: #fff; }
+.round-hero-vs { font-family: "Anton", sans-serif; font-size: 13px; color: rgba(255,255,255,0.45); padding-top: 22px; }
+.round-hero-tippers { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 16px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.12); }
+/* Split bar + captions invert inside the black hero */
+.round-hero .win-split-bar { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.16); box-shadow: none; }
+.round-hero .win-split-caption { color: rgba(255,255,255,0.5); }
+.round-hero .tipper-dot { border-color: #1A1D25; }
+.round-hero .tipper-dot.more { background: rgba(255,255,255,0.14); color: rgba(255,255,255,0.75); }
+.round-hero .card-footer { position: relative; z-index: 1; padding: 14px 18px 16px; border-top-color: rgba(255,255,255,0.12); }
+.round-hero .view-match { color: var(--live); }
 .sec-label { font-family: "Anton", sans-serif; font-size: 11px; letter-spacing: 0.1em; color: var(--text-faint); margin: 4px 0 11px; }
 .card-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 13px 16px 14px; margin-top: 2px; border-top: 1px solid var(--border); }
 .tipper-stack { display: flex; align-items: center; }
@@ -6592,24 +6618,13 @@ function renderRoundHero(num) {
     labelHtml = `<div class="round-hero-label"><span class="pip"></span>LIVE &middot; ${liveScore.minute || liveScore.status || 'in play'}</div>`;
     scoreHtml = `<div class="round-hero-score">${liveScore.home}</div>`;
   } else if (mode === 'ft') {
-    labelHtml = `<div class="round-hero-label">FULL TIME</div>`;
+    labelHtml = `<div class="round-hero-label muted">FULL TIME</div>`;
     scoreHtml = liveScore ? `<div class="round-hero-score">${liveScore.home}</div>` : '';
   } else {
-    labelHtml = `<div class="round-hero-label">NEXT &middot; ${formatKickoff(cand.startMs)}${timeUntilKickoff(cand.startMs) ? ' &middot; ' + timeUntilKickoff(cand.startMs) : ''}</div>`;
+    labelHtml = `<div class="round-hero-label muted">NEXT &middot; ${formatKickoff(cand.startMs)}${timeUntilKickoff(cand.startMs) ? ' &middot; ' + timeUntilKickoff(cand.startMs) : ''}</div>`;
     scoreHtml = '';
   }
   const awayScoreHtml = mode !== 'next' && liveScore ? `<div class="round-hero-score">${liveScore.away}</div>` : '';
-
-  const r = getRound(num);
-  const homeCodes = r.picksHome?.[i] || [];
-  const awayCodes = r.picksAway?.[i] || [];
-  const winner = r.winners?.[i];
-  const pill = (code, side) => {
-    let cls = side === 'home' ? '' : 'away';
-    if (winner) cls = winner === side ? 'correct' : 'wrong';
-    return `<span class="spotlight-tip-pill ${cls}">${code}</span>`;
-  };
-  const allPills = [...homeCodes.map(c => pill(c, 'home')), ...awayCodes.map(c => pill(c, 'away'))];
 
   el.innerHTML = `
     <div class="round-hero" data-game="${i}" style="--home-c:${teamColor(g.home)};--away-c:${teamColor(g.away)}">
@@ -6630,8 +6645,8 @@ function renderRoundHero(num) {
           </div>
         </div>
         ${winSplitBarHtml(g, gameWinSplit(num, i), true)}
-        ${allPills.length ? `<div class="round-hero-tippers">${allPills.join('')}</div>` : ''}
       </div>
+      ${cardFooterHtml(num, i)}
     </div>`;
 }
 
