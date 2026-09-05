@@ -1647,6 +1647,7 @@ body.viewer .import-picks-box::before {
 .win-split-fill.home { background: var(--home-c, var(--nav-active)); }
 .win-split-fill.away { background: var(--away-c, var(--accent-warm)); }
 .win-split-caption { text-align: center; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); margin-top: 5px; }
+.edge-badge { position: absolute; top: 12px; right: -1px; font-family: "Anton", sans-serif; font-size: 9.5px; letter-spacing: 0.08em; color: #fff; background: var(--accent); padding: 4px 9px 4px 11px; border-radius: 6px 0 0 6px; box-shadow: 0 3px 8px rgba(245,200,66,0.4); z-index: 2; }
 .win-split-wrap.large .win-split-labels { font-size: 20px; font-family: "Anton", sans-serif; letter-spacing: 0.02em; }
 .win-split-wrap.large .win-split-bar { height: 10px; border-radius: 5px; }
 
@@ -5958,6 +5959,24 @@ function gameWinSplit(roundNum, gameIdx) {
   const awayN = sides.length - homeN;
   return { home: homeN / sides.length, away: awayN / sides.length, source: 'tips', label: `${sides.length} tip${sides.length === 1 ? '' : 's'} in` };
 }
+/* Raw tip-split majority, independent of odds — used to compare the
+   family's own lean against the "expected" favourite for edge picks. */
+function crowdPickSide(roundNum, gameIdx) {
+  const sides = ALL_CODES.map(code => pickSide(roundNum, code, gameIdx)).filter(Boolean);
+  if (!sides.length) return null;
+  const homeN = sides.filter(s => s === 'home').length;
+  const awayN = sides.length - homeN;
+  if (homeN === awayN) return null;
+  return homeN > awayN ? 'home' : 'away';
+}
+/* Edge pick: the family's tip-split leans a different way than the
+   expected favourite (bookmaker odds when fetched, else ladder strength). */
+function isEdgePick(roundNum, gameIdx) {
+  const crowd = crowdPickSide(roundNum, gameIdx);
+  const fav = favouriteSideForGame(roundNum, gameIdx);
+  if (!crowd || !fav) return false;
+  return crowd !== fav;
+}
 /* Last-n results for a team ('W'/'L'), oldest to newest, walking the same
    historic+live iteration pattern as teamStrengthMap. */
 function teamRecentForm(team, beforeRound, n = 5) {
@@ -6501,6 +6520,7 @@ function renderLiveRound(num, fx) {
 
     return `
       <div class="game-card ${winner ? 'has-winner win-' + winner : ''}" data-game="${i}" style="--home-c:${teamColor(g.home)};--away-c:${teamColor(g.away)}${winner ? ';--win-c:' + teamColor(winner === 'home' ? g.home : g.away) : ''}">
+        ${!winner && isEdgePick(num, i) ? '<div class="edge-badge">EDGE PICK</div>' : ''}
         <div class="game-head">
           <span class="when">${g.when}</span>
           <span class="venue">${g.venue}</span>
