@@ -2980,7 +2980,9 @@ const TEAM_BADGES = {
 function teamLogoHtml(name) {
   const key = Object.keys(TEAM_BADGES).find(k => name && name.includes(k));
   if (!key) return '';
-  return `<img class="team-logo" src="${TEAM_BADGES[key]}" alt="" loading="lazy" onerror="this.remove()">`;
+  /* eager + sync decode: these are small local files that are always on
+     screen, and lazy/async made them repaint blank on every re-render. */
+  return `<img class="team-logo" src="${TEAM_BADGES[key]}" alt="" loading="eager" decoding="sync" onerror="this.remove()">`;
 }
 
 function roundScore(code, num) {
@@ -6869,6 +6871,35 @@ function cardFooterHtml(roundNum, gameIdx, limit = 5) {
     </div>`;
 }
 
+/* Apply a winner change to one already-rendered card without rebuilding it —
+   everything the winner affects is a class, a custom property, or the edge
+   badge, so none of the crest images need to be touched. */
+function paintGameCardWinner(roundNum, gameIdx) {
+  const card = $('gamesList')?.querySelector(`.game-card[data-game="${gameIdx}"]`);
+  if (!card) return;
+  const fx = getFixture(roundNum);
+  const g = fx.games[gameIdx];
+  const winner = getRound(roundNum).winners?.[gameIdx];
+
+  card.classList.toggle('has-winner', !!winner);
+  card.classList.toggle('win-home', winner === 'home');
+  card.classList.toggle('win-away', winner === 'away');
+  if (winner) card.style.setProperty('--win-c', teamColor(winner === 'home' ? g.home : g.away));
+  else card.style.removeProperty('--win-c');
+
+  card.querySelectorAll('.team-btn').forEach(b => {
+    b.classList.toggle('winner', !!winner && b.dataset.side === winner);
+  });
+
+  const existingBadge = card.querySelector('.edge-badge');
+  const wantsBadge = !winner && isEdgePick(roundNum, gameIdx);
+  if (wantsBadge && !existingBadge) {
+    card.insertAdjacentHTML('afterbegin', '<div class="edge-badge">EDGE PICK</div>');
+  } else if (!wantsBadge && existingBadge) {
+    existingBadge.remove();
+  }
+}
+
 function renderLiveRound(num, fx) {
   const r = getRound(num);
   const settings = getPredictionSettings();
@@ -6956,7 +6987,13 @@ function renderLiveRound(num, fx) {
       else r.winners[idx] = side;
       stampNow(`round:${num}:winners:${idx}`);
       saveState();
-      renderRound(); renderStandings();
+      /* Update this card in place. Re-rendering the whole list would tear
+         down and recreate every crest <img>, which flashes white while the
+         browser re-decodes them. */
+      paintGameCardWinner(num, idx);
+      renderRoundStatTiles(num);
+      renderMissingPicksBanner();
+      renderStandings();
       if (State.currentTab === 'stats') renderStats();
       if (State.currentTab === 'h2h') renderH2H();
     });
