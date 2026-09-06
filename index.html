@@ -4385,7 +4385,7 @@ function anyGameLiveNow(num) {
   const now = Date.now();
   return fx.games.some((g, i) => {
     if (r.winners?.[i]) return false; // already resulted, don't poll
-    const startMs = parseGameStartMs(g);
+    const startMs = parseGameStartMs(g, num);
     if (!startMs) return false;
     const liveWindowEnd = startMs + 150 * 60_000; // 2h30 from kickoff (covers full-time + extra time)
     return now >= startMs && now <= liveWindowEnd;
@@ -4393,17 +4393,53 @@ function anyGameLiveNow(num) {
 }
 
 /* Best-effort parsing of fixture start times from the embedded fixture data */
-function parseGameStartMs(g) {
-  // g.when is like "Fri 2 May, 8:00 PM" (no year/zone). Combine with fixture range to infer year.
-  // Cheaper alternative: trust g.startISO if present, else parse g.when generously.
+const SEASON_YEAR = 2026;
+const MONTH_IDX = { jan:0, feb:1, mar:2, apr:3, may:4, jun:5, jul:6, aug:7, sep:8, oct:9, nov:10, dec:11 };
+const DAY_IDX = { sun:0, mon:1, tue:2, wed:3, thu:4, fri:5, sat:6 };
+
+/* A round's date span, from the fixture range: 'Apr 23 – 26' or 'Jul 30 – Aug 2'.
+   Historic rounds use range:'Round N' and simply return null. */
+function roundWindow(roundNum) {
+  const fx = FIXTURES[roundNum];
+  if (!fx || !fx.range) return null;
+  const m = String(fx.range).match(/([A-Za-z]{3})[a-z]*\s+(\d{1,2})\s*[–—-]\s*(?:([A-Za-z]{3})[a-z]*\s+)?(\d{1,2})/);
+  if (!m) return null;
+  const sMonth = MONTH_IDX[m[1].toLowerCase()];
+  const eMonth = m[3] ? MONTH_IDX[m[3].toLowerCase()] : sMonth;
+  if (sMonth === undefined || eMonth === undefined) return null;
+  return {
+    start: new Date(SEASON_YEAR, sMonth, +m[2]),
+    end: new Date(SEASON_YEAR, eMonth, +m[4])
+  };
+}
+
+/* Fixtures only carry a weekday + time ("Thu 7:50pm"), so resolve it against
+   the round's date window to get a real kickoff timestamp. */
+function parseGameStartMs(g, roundNum) {
   if (g.startISO) {
     const d = new Date(g.startISO);
     if (!isNaN(d)) return d.getTime();
   }
-  if (g.when) {
-    const yearGuess = new Date().getFullYear();
-    const d = new Date(`${g.when} ${yearGuess}`);
-    if (!isNaN(d)) return d.getTime();
+  if (!g.when) return null;
+  const wm = String(g.when).match(/^([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
+  if (!wm) return null;
+  const dayIdx = DAY_IDX[wm[1].toLowerCase()];
+  if (dayIdx === undefined) return null;
+
+  let hour = +wm[2];
+  const min = wm[3] ? +wm[3] : 0;
+  const ap = (wm[4] || '').toLowerCase();
+  if (ap === 'pm' && hour !== 12) hour += 12;
+  else if (ap === 'am' && hour === 12) hour = 0;
+  else if (!ap && hour < 12) hour += 12; // bare "7:50" on an NRL card means evening
+
+  const win = roundWindow(roundNum);
+  if (!win) return null;
+  const limit = win.end.getTime() + 86400000;
+  for (let d = new Date(win.start); d.getTime() <= limit; d.setDate(d.getDate() + 1)) {
+    if (d.getDay() === dayIdx) {
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate(), hour, min).getTime();
+    }
   }
   return null;
 }
@@ -4589,54 +4625,52 @@ function spotlightCandidate() {
   if (!fx) return null;
   const r = State.rounds[num] || {};
   const now = Date.now();
-  const FT_WINDOW_MS = 10 * 60 * 1000;          // show FT for 10 min only
-  const NEXT_WINDOW_MS = 24 * 60 * 60 * 1000;   // only spotlight NEXT within 24h of kickoff
+  const AVG_GAME_MS = 110 * 60 * 1000;      // ~110 min incl. breaks
+  const FT_WINDOW_MS = 3 * 60 * 60 * 1000;  // keep a finished game up for 3h
 
-  let live = null;
-  let recent = null;
-  let upcoming = null;
-  let earliestUpcomingMs = Infinity;
-  let latestRecentMs = -Infinity;
+  let live = null, liveMs = -Infinity;
+  let recent = null, latestRecentMs = -Infinity;
+  let upcoming = null, earliestUpcomingMs = Infinity;
 
   fx.games.forEach((g, i) => {
-    const startMs = parseGameStartMs(g);
+    const startMs = parseGameStartMs(g, num);
     const isResulted = !!r.winners?.[i];
     const liveScore = LiveState.scores?.[i];
+    const status = (liveScore?.status || '').toLowerCase();
+    const feedSaysFinished = status.includes('ft') || status.includes('full') || status.includes('finished');
 
-    // 1) Currently live (has live data, not finished, not resulted)
-    if (liveScore && !isResulted) {
-      const status = (liveScore.status || '').toLowerCase();
-      const isFinished = status.includes('ft') || status.includes('full') || status.includes('finished');
-      if (!isFinished && !live) {
+    /* 1) On now. Trust the clock as well as the live feed — TheSportsDB
+       often has nothing for a match that's plainly underway. */
+    const inPlayByClock = startMs && now >= startMs && now < startMs + AVG_GAME_MS;
+    if (!isResulted && ((liveScore && !feedSaysFinished) || inPlayByClock)) {
+      if (!live || (startMs || 0) > liveMs) {
+        liveMs = startMs || 0;
         live = { i, g, startMs, liveScore, mode: 'live' };
       }
     }
 
-    // 2) Just-finished FT (within 10 min of kickoff time)
-    // We use kickoff + average game length (~110 min including breaks) to gauge "just finished"
-    // Simpler heuristic: if resulted AND kickoff was less than (110 + 10) min ago
-    const AVG_GAME_MS = 110 * 60 * 1000; // ~110 min for an NRL game w/ breaks
-    if (isResulted && startMs) {
+    // 2) Recently finished
+    if (startMs && (isResulted || feedSaysFinished)) {
       const sinceKickoff = now - startMs;
-      // FT window starts when game should have ended, lasts FT_WINDOW_MS minutes
-      const inFtWindow = sinceKickoff >= AVG_GAME_MS && sinceKickoff < (AVG_GAME_MS + FT_WINDOW_MS);
-      if (inFtWindow && startMs > latestRecentMs) {
+      if (sinceKickoff >= AVG_GAME_MS && sinceKickoff < AVG_GAME_MS + FT_WINDOW_MS && startMs > latestRecentMs) {
         latestRecentMs = startMs;
-        recent = { i, g, startMs, liveScore, mode: 'ft', resulted: true };
+        recent = { i, g, startMs, liveScore, mode: 'ft', resulted: isResulted };
       }
     }
 
-    // 3) Upcoming within 24h of kickoff
-    if (startMs && startMs > now && !isResulted) {
-      const timeUntil = startMs - now;
-      if (timeUntil <= NEXT_WINDOW_MS && startMs < earliestUpcomingMs) {
-        earliestUpcomingMs = startMs;
-        upcoming = { i, g, startMs, mode: 'next' };
-      }
+    // 3) Next to kick off — any distance out, so this round always has a focus
+    if (startMs && startMs > now && !isResulted && startMs < earliestUpcomingMs) {
+      earliestUpcomingMs = startMs;
+      upcoming = { i, g, startMs, mode: 'next' };
     }
   });
 
-  // Priority: Live > FT (10min) > NEXT (24h) > nothing
+  /* Fall back to the first unresulted game so the round always leads with
+     something, even when kickoff times can't be resolved. */
+  if (!live && !recent && !upcoming) {
+    const idx = fx.games.findIndex((g, i) => !r.winners?.[i]);
+    if (idx >= 0) return { i: idx, g: fx.games[idx], startMs: parseGameStartMs(fx.games[idx], num), mode: 'next' };
+  }
   return live || recent || upcoming || null;
 }
 
@@ -6794,18 +6828,25 @@ function renderRoundHero(num) {
   if (!cand) { el.innerHTML = ''; return; }
   const { i, g, mode, liveScore } = cand;
 
+  /* A game can be in play without the feed having anything for it, so the
+     score is only shown when we actually have one. */
+  const stored = finalScoreForGame(State.currentRound, i);
+  const score = liveScore || stored || null;
   let labelHtml, scoreHtml;
   if (mode === 'live') {
-    labelHtml = `<div class="round-hero-label"><span class="pip"></span>LIVE &middot; ${liveScore.minute || liveScore.status || 'in play'}</div>`;
-    scoreHtml = `<div class="round-hero-score">${liveScore.home}</div>`;
+    const clock = liveScore?.minute || liveScore?.status || 'in play';
+    labelHtml = `<div class="round-hero-label"><span class="pip"></span>LIVE &middot; ${clock}</div>`;
+    scoreHtml = score ? `<div class="round-hero-score">${score.home}</div>` : '';
   } else if (mode === 'ft') {
     labelHtml = `<div class="round-hero-label muted">FULL TIME</div>`;
-    scoreHtml = liveScore ? `<div class="round-hero-score">${liveScore.home}</div>` : '';
+    scoreHtml = score ? `<div class="round-hero-score">${score.home}</div>` : '';
   } else {
-    labelHtml = `<div class="round-hero-label muted">NEXT &middot; ${formatKickoff(cand.startMs)}${timeUntilKickoff(cand.startMs) ? ' &middot; ' + timeUntilKickoff(cand.startMs) : ''}</div>`;
+    const when = formatKickoff(cand.startMs) || g.when || '';
+    const until = timeUntilKickoff(cand.startMs);
+    labelHtml = `<div class="round-hero-label muted">NEXT${when ? ' &middot; ' + when : ''}${until ? ' &middot; ' + until : ''}</div>`;
     scoreHtml = '';
   }
-  const awayScoreHtml = mode !== 'next' && liveScore ? `<div class="round-hero-score">${liveScore.away}</div>` : '';
+  const awayScoreHtml = mode !== 'next' && score ? `<div class="round-hero-score">${score.away}</div>` : '';
 
   el.innerHTML = `
     <div class="round-hero" data-game="${i}" style="--home-c:${teamColor(g.home)};--away-c:${teamColor(g.away)}">
@@ -7828,7 +7869,7 @@ function compactCandidate() {
   let nextUp = null, nextUpMs = Infinity;
 
   fx.games.forEach((g, i) => {
-    const startMs = parseGameStartMs(g);
+    const startMs = parseGameStartMs(g, num);
     const isResulted = !!r.winners?.[i];
     const ls = LiveState.scores?.[i];
     const status = (ls?.status || '').toLowerCase();
@@ -7933,7 +7974,7 @@ function renderCompact() {
 function formatNextWhen(g) {
   // Prefer the raw "when" string (e.g. "Fri 2 May, 8:00 PM"); fall back to parsed date
   if (g.when) return g.when;
-  const ms = parseGameStartMs(g);
+  const ms = parseGameStartMs(g, State.currentRound);
   if (!ms) return '';
   const d = new Date(ms);
   return d.toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
